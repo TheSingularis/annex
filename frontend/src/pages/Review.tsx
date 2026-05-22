@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { api, Import, Candidate } from "../lib/api";
+import { useTheme } from "../lib/ThemeContext";
 
 export default function Review() {
+  const { tokens } = useTheme();
   const [imports, setImports] = useState<Import[]>([]);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState<Import | null>(null);
@@ -42,22 +44,28 @@ export default function Review() {
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "8px 12px", border: `1px solid ${tokens.inputBorder}`,
+    borderRadius: 6, fontSize: 14, boxSizing: "border-box",
+    background: tokens.surface, color: tokens.text,
+  };
+
   return (
     <div>
-      <h1 style={{ fontSize: 24, marginBottom: 24 }}>Needs Review ({imports.length})</h1>
+      <h1 style={{ fontSize: 24, marginBottom: 24, color: tokens.text }}>Needs Review ({imports.length})</h1>
 
-      {loading ? <div>Loading...</div> : imports.length === 0 ? (
-        <div style={{ color: "#6c757d", padding: 32, textAlign: "center" }}>Nothing to review</div>
+      {loading ? <div style={{ color: tokens.textMuted }}>Loading...</div> : imports.length === 0 ? (
+        <div style={{ color: tokens.textMuted, padding: 32, textAlign: "center" }}>Nothing to review</div>
       ) : (
         <div style={{ display: "grid", gap: 12 }}>
           {imports.map(imp => {
             const candidates: Candidate[] = imp.candidates_json ? JSON.parse(imp.candidates_json) : [];
             return (
-              <div key={imp.id} style={{ background: "#fff", borderRadius: 8, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,.1)" }}>
+              <div key={imp.id} style={{ background: tokens.surface, borderRadius: 8, padding: 20, boxShadow: tokens.shadow }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{imp.name}</div>
-                    <div style={{ fontSize: 12, color: "#6c757d" }}>{imp.category} · {imp.content_path}</div>
+                    <div style={{ fontWeight: 600, marginBottom: 4, color: tokens.text }}>{imp.name}</div>
+                    <div style={{ fontSize: 12, color: tokens.textMuted }}>{imp.category} · {imp.content_path}</div>
                     {imp.metadata_confidence != null && (
                       <div style={{ fontSize: 12, color: "#fd7e14", marginTop: 4 }}>
                         Best match confidence: {Math.round(imp.metadata_confidence * 100)}%
@@ -70,9 +78,9 @@ export default function Review() {
                 {candidates.length > 0 && (
                   <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {candidates.map((c, i) => (
-                      <div key={i} style={{ background: "#f8f9fa", border: "1px solid #dee2e6", borderRadius: 6, padding: "6px 10px", fontSize: 12 }}>
+                      <div key={i} style={{ background: tokens.surfaceHover, border: `1px solid ${tokens.border}`, borderRadius: 6, padding: "6px 10px", fontSize: 12, color: tokens.text }}>
                         <strong>{c.title}</strong> — {c.author}
-                        <span style={{ color: "#6c757d", marginLeft: 6 }}>{Math.round(c.score * 100)}%</span>
+                        <span style={{ color: tokens.textMuted, marginLeft: 6 }}>{Math.round(c.score * 100)}%</span>
                       </div>
                     ))}
                   </div>
@@ -84,23 +92,23 @@ export default function Review() {
       )}
 
       {active && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-          <div style={{ background: "#fff", borderRadius: 10, padding: 32, width: 520, maxHeight: "90vh", overflow: "auto" }}>
-            <h2 style={{ margin: "0 0 8px" }}>Resolve Metadata</h2>
-            <div style={{ fontSize: 13, color: "#6c757d", marginBottom: 20 }}>{active.name}</div>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+          <div style={{ background: tokens.surface, borderRadius: 10, padding: 32, width: 520, maxHeight: "90vh", overflow: "auto", boxShadow: "0 8px 32px rgba(0,0,0,.3)" }}>
+            <h2 style={{ margin: "0 0 8px", color: tokens.text }}>Resolve Metadata</h2>
+            <div style={{ fontSize: 13, color: tokens.textMuted, marginBottom: 20 }}>{active.name}</div>
 
             {active.candidates_json && JSON.parse(active.candidates_json).length > 0 && (
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Candidates</div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: tokens.text }}>Candidates</div>
                 {(JSON.parse(active.candidates_json) as Candidate[]).map((c, i) => (
                   <div
                     key={i}
                     onClick={() => selectCandidate(c)}
-                    style={{ border: "1px solid #dee2e6", borderRadius: 6, padding: "10px 12px", marginBottom: 6, cursor: "pointer", fontSize: 13 }}
+                    style={{ border: `1px solid ${tokens.border}`, borderRadius: 6, padding: "10px 12px", marginBottom: 6, cursor: "pointer", fontSize: 13, color: tokens.text, background: tokens.surfaceHover }}
                   >
                     <strong>{c.title}</strong> — {c.author}
-                    {c.series && <span style={{ color: "#6c757d" }}> ({c.series} #{c.series_seq})</span>}
-                    <span style={{ float: "right", color: "#6c757d" }}>{Math.round(c.score * 100)}%</span>
+                    {c.series && <span style={{ color: tokens.textMuted }}> ({c.series} #{c.series_seq})</span>}
+                    <span style={{ float: "right", color: tokens.textMuted }}>{Math.round(c.score * 100)}%</span>
                   </div>
                 ))}
               </div>
@@ -132,8 +140,3 @@ const btnStyle = (bg: string): React.CSSProperties => ({
   background: bg, color: "#fff", border: "none", borderRadius: 6,
   padding: "8px 16px", cursor: "pointer", fontSize: 14,
 });
-
-const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "8px 12px", border: "1px solid #dee2e6",
-  borderRadius: 6, fontSize: 14, boxSizing: "border-box",
-};

@@ -1,6 +1,13 @@
 from flask import Blueprint, jsonify, current_app
+from app.abs import ABSClient
 
 config_bp = Blueprint("config", __name__)
+
+
+@config_bp.get("/status")
+def get_status():
+    abs_status = ABSClient().check_connection()
+    return jsonify({"abs": abs_status})
 
 
 @config_bp.get("/")

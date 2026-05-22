@@ -1,0 +1,10 @@
+backend/.venv/
+backend/.env
+backend/instance/
+backend/celerybeat-schedule
+frontend/node_modules/
+frontend/dist/
+__pycache__/
+*.pyc
+*.db
+.DS_Store

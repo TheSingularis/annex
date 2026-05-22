@@ -1,0 +1,14 @@
+services:
+  annex:
+    image: ghcr.io/thesingularis/annex:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ./backend/.env
+    volumes:
+      - /home/jordan/Docker/appdata/annex:/app/data
+      - /home/jordan/Docker/Downloads:/mnt/downloads:ro
+      - /home/jordan/Docker/library:/mnt/library
+    ports:
+      - "5000:5000"

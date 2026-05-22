@@ -35,10 +35,17 @@ All configuration is via environment variables in `backend/.env`:
 | `EBOOK_LIBRARY_PATH` | Organized ebook library destination (inside container) | `/mnt/library/ebooks` |
 | `CONFIDENCE_THRESHOLD` | Metadata match threshold (0–1). Below this, item is queued for review | `0.85` |
 | `POLL_INTERVAL_SECONDS` | How often to scan watch directories | `60` |
-| `ABS_HOST` | Audiobookshelf URL — triggers a library scan after each import | |
-| `ABS_API_KEY` | Audiobookshelf API key | |
-| `ABS_AUDIOBOOK_LIBRARY_ID` | Audiobookshelf audiobook library ID | |
-| `ABS_EBOOK_LIBRARY_ID` | Audiobookshelf ebook library ID | |
+
+### Optional — Audiobookshelf integration
+
+When configured, Annex will trigger an ABS library scan after each successful import.
+
+| Variable | Description |
+|---|---|
+| `ABS_HOST` | Audiobookshelf URL (e.g. `http://192.168.1.100:13378`) |
+| `ABS_API_KEY` | Audiobookshelf API key |
+| `ABS_AUDIOBOOK_LIBRARY_ID` | ABS audiobook library ID |
+| `ABS_EBOOK_LIBRARY_ID` | ABS ebook library ID |
 
 ## Unraid Setup
 

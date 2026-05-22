@@ -31,18 +31,28 @@ export default function Settings() {
   const [config, setConfig] = useState<Config | null>(null);
   const [absForm, setAbsForm] = useState<AbsSettings>({ abs_host: "", abs_api_key: "", abs_audiobook_library_id: "", abs_ebook_library_id: "" });
   const [absStatus, setAbsStatus] = useState<AbsStatus | null>(null);
-  const [statusLoading, setStatusLoading] = useState(true);
+  const [statusLoading, setStatusLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     fetch("/api/config/").then(r => r.json()).then(setConfig);
-    api.getSettings().then(setAbsForm);
-    checkStatus();
+    api.getSettings().then(d => {
+      setAbsForm(d);
+      if (d.abs_host) {
+        setStatusLoading(true);
+        api.getAbsStatus().then(r => setAbsStatus(r.abs)).finally(() => setStatusLoading(false));
+      }
+    });
   }, []);
 
   const checkStatus = () => {
+    if (!absForm.abs_host) {
+      setAbsStatus({ reachable: false, authenticated: false, error: "Host URL is required" });
+      return;
+    }
     setStatusLoading(true);
+    setAbsStatus(null);
     api.getAbsStatus().then(d => setAbsStatus(d.abs)).finally(() => setStatusLoading(false));
   };
 

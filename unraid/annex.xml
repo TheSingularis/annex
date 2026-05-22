@@ -62,24 +62,24 @@
   <Config
     Name="Downloads"
     Target="/downloads"
-    Default="/mnt/user/Downloads"
+    Default="/mnt/user/downloads"
     Mode="ro"
     Description="Root of your download directory. Set watch subdirectories in the Annex web UI."
     Type="Path"
     Display="always"
     Required="true"
-    Mask="false">/mnt/user/Downloads</Config>
+    Mask="false"></Config>
 
   <Config
     Name="Library"
     Target="/library"
-    Default="/mnt/user/data/books"
+    Default="/mnt/user/media"
     Mode="rw"
     Description="Root of your organized book library. Set library subdirectories in the Annex web UI."
     Type="Path"
     Display="always"
     Required="true"
-    Mask="false">/mnt/user/data/books</Config>
+    Mask="false"></Config>
 
   <Config
     Name="Confidence Threshold"

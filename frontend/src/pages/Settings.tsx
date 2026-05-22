@@ -1,12 +1,8 @@
 import { useEffect, useState } from "react";
-import { api, AbsSettings, AbsStatus, ImportStatus } from "../lib/api";
+import { api, AbsSettings, PathSettings, AllSettings, ImportStatus } from "../lib/api";
 import { useTheme } from "../lib/ThemeContext";
 
-interface Config {
-  audiobook_watch_path: string;
-  ebook_watch_path: string;
-  audiobook_library_path: string;
-  ebook_library_path: string;
+interface EnvConfig {
   confidence_threshold: number;
   poll_interval_seconds: number;
 }
@@ -26,26 +22,36 @@ function StatusDot({ status, loading }: { status: AbsStatus | null; loading: boo
   );
 }
 
+interface AbsStatus {
+  reachable: boolean;
+  authenticated: boolean;
+  error: string | null;
+}
+
 export default function Settings() {
   const { tokens } = useTheme();
-  const [config, setConfig] = useState<Config | null>(null);
   const [absForm, setAbsForm] = useState<AbsSettings>({ abs_host: "", abs_api_key: "", abs_audiobook_library_id: "", abs_ebook_library_id: "" });
+  const [pathForm, setPathForm] = useState<PathSettings>({ audiobook_watch_path: "", ebook_watch_path: "", audiobook_library_path: "", ebook_library_path: "" });
+  const [envConfig, setEnvConfig] = useState<EnvConfig | null>(null);
   const [absStatus, setAbsStatus] = useState<AbsStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [absSaving, setAbsSaving] = useState(false);
+  const [absSaved, setAbsSaved] = useState(false);
+  const [pathSaving, setPathSaving] = useState(false);
+  const [pathSaved, setPathSaved] = useState(false);
   const [clearing, setClearing] = useState<string | null>(null);
   const [clearMsg, setClearMsg] = useState("");
 
   useEffect(() => {
-    fetch("/api/config/").then(r => r.json()).then(setConfig);
-    api.getSettings().then(d => {
-      setAbsForm(d);
+    api.getSettings().then((d: AllSettings) => {
+      setAbsForm({ abs_host: d.abs_host, abs_api_key: d.abs_api_key, abs_audiobook_library_id: d.abs_audiobook_library_id, abs_ebook_library_id: d.abs_ebook_library_id });
+      setPathForm({ audiobook_watch_path: d.audiobook_watch_path, ebook_watch_path: d.ebook_watch_path, audiobook_library_path: d.audiobook_library_path, ebook_library_path: d.ebook_library_path });
       if (d.abs_host) {
         setStatusLoading(true);
         api.getAbsStatus().then(r => setAbsStatus(r.abs)).finally(() => setStatusLoading(false));
       }
     });
+    fetch("/api/config/").then(r => r.json()).then(setEnvConfig);
   }, []);
 
   const checkStatus = () => {
@@ -60,16 +66,30 @@ export default function Settings() {
 
   const handleAbsSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    setSaved(false);
+    setAbsSaving(true);
+    setAbsSaved(false);
     try {
       const updated = await api.updateSettings(absForm);
-      setAbsForm(updated);
-      setSaved(true);
+      setAbsForm({ abs_host: updated.abs_host, abs_api_key: updated.abs_api_key, abs_audiobook_library_id: updated.abs_audiobook_library_id, abs_ebook_library_id: updated.abs_ebook_library_id });
+      setAbsSaved(true);
       checkStatus();
-      setTimeout(() => setSaved(false), 3000);
+      setTimeout(() => setAbsSaved(false), 3000);
     } finally {
-      setSaving(false);
+      setAbsSaving(false);
+    }
+  };
+
+  const handlePathSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPathSaving(true);
+    setPathSaved(false);
+    try {
+      const updated = await api.updateSettings(pathForm);
+      setPathForm({ audiobook_watch_path: updated.audiobook_watch_path, ebook_watch_path: updated.ebook_watch_path, audiobook_library_path: updated.audiobook_library_path, ebook_library_path: updated.ebook_library_path });
+      setPathSaved(true);
+      setTimeout(() => setPathSaved(false), 3000);
+    } finally {
+      setPathSaving(false);
     }
   };
 
@@ -98,7 +118,40 @@ export default function Settings() {
 
       <div style={{ display: "grid", gap: 16, maxWidth: 600 }}>
 
-        {/* ABS — editable form */}
+        {/* Paths — editable */}
+        <div style={{ background: tokens.surface, borderRadius: 8, padding: 20, boxShadow: tokens.shadow }}>
+          <div style={{ fontWeight: 600, fontSize: 13, color: tokens.textMuted, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 16 }}>
+            Paths
+          </div>
+          <form onSubmit={handlePathSave}>
+            <div style={{ display: "grid", gap: 10 }}>
+              <label style={{ fontSize: 13, color: tokens.textMuted }}>
+                Audiobook watch directory
+                <input style={{ ...inputStyle, marginTop: 4 }} placeholder="/downloads/audiobooks" value={pathForm.audiobook_watch_path} onChange={e => setPathForm(f => ({ ...f, audiobook_watch_path: e.target.value }))} />
+              </label>
+              <label style={{ fontSize: 13, color: tokens.textMuted }}>
+                Ebook watch directory
+                <input style={{ ...inputStyle, marginTop: 4 }} placeholder="/downloads/ebooks" value={pathForm.ebook_watch_path} onChange={e => setPathForm(f => ({ ...f, ebook_watch_path: e.target.value }))} />
+              </label>
+              <label style={{ fontSize: 13, color: tokens.textMuted }}>
+                Audiobook library
+                <input style={{ ...inputStyle, marginTop: 4 }} placeholder="/library/audiobooks" value={pathForm.audiobook_library_path} onChange={e => setPathForm(f => ({ ...f, audiobook_library_path: e.target.value }))} />
+              </label>
+              <label style={{ fontSize: 13, color: tokens.textMuted }}>
+                Ebook library
+                <input style={{ ...inputStyle, marginTop: 4 }} placeholder="/library/ebooks" value={pathForm.ebook_library_path} onChange={e => setPathForm(f => ({ ...f, ebook_library_path: e.target.value }))} />
+              </label>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
+                <button type="submit" disabled={pathSaving} style={{ background: "#0d6efd", color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", cursor: "pointer", fontSize: 14 }}>
+                  {pathSaving ? "Saving..." : "Save"}
+                </button>
+                {pathSaved && <span style={{ fontSize: 13, color: "#198754" }}>Saved</span>}
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* ABS — editable */}
         <div style={{ background: tokens.surface, borderRadius: 8, padding: 20, boxShadow: tokens.shadow }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div style={{ fontWeight: 600, fontSize: 13, color: tokens.textMuted, textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -110,82 +163,44 @@ export default function Settings() {
             <div style={{ display: "grid", gap: 10 }}>
               <label style={{ fontSize: 13, color: tokens.textMuted }}>
                 Host URL
-                <input
-                  style={{ ...inputStyle, marginTop: 4 }}
-                  placeholder="http://192.168.1.100:13378"
-                  value={absForm.abs_host}
-                  onChange={e => setAbsForm(f => ({ ...f, abs_host: e.target.value }))}
-                />
+                <input style={{ ...inputStyle, marginTop: 4 }} placeholder="http://192.168.1.100:13378" value={absForm.abs_host} onChange={e => setAbsForm(f => ({ ...f, abs_host: e.target.value }))} />
               </label>
               <label style={{ fontSize: 13, color: tokens.textMuted }}>
                 API Key
-                <input
-                  style={{ ...inputStyle, marginTop: 4 }}
-                  type="password"
-                  placeholder="Your ABS API key"
-                  value={absForm.abs_api_key}
-                  onChange={e => setAbsForm(f => ({ ...f, abs_api_key: e.target.value }))}
-                />
+                <input style={{ ...inputStyle, marginTop: 4 }} type="password" placeholder="Your ABS API key" value={absForm.abs_api_key} onChange={e => setAbsForm(f => ({ ...f, abs_api_key: e.target.value }))} />
               </label>
               <label style={{ fontSize: 13, color: tokens.textMuted }}>
                 Audiobook Library ID
-                <input
-                  style={{ ...inputStyle, marginTop: 4 }}
-                  placeholder="e.g. lib_abc123"
-                  value={absForm.abs_audiobook_library_id}
-                  onChange={e => setAbsForm(f => ({ ...f, abs_audiobook_library_id: e.target.value }))}
-                />
+                <input style={{ ...inputStyle, marginTop: 4 }} placeholder="e.g. lib_abc123" value={absForm.abs_audiobook_library_id} onChange={e => setAbsForm(f => ({ ...f, abs_audiobook_library_id: e.target.value }))} />
               </label>
               <label style={{ fontSize: 13, color: tokens.textMuted }}>
                 Ebook Library ID
-                <input
-                  style={{ ...inputStyle, marginTop: 4 }}
-                  placeholder="e.g. lib_def456"
-                  value={absForm.abs_ebook_library_id}
-                  onChange={e => setAbsForm(f => ({ ...f, abs_ebook_library_id: e.target.value }))}
-                />
+                <input style={{ ...inputStyle, marginTop: 4 }} placeholder="e.g. lib_def456" value={absForm.abs_ebook_library_id} onChange={e => setAbsForm(f => ({ ...f, abs_ebook_library_id: e.target.value }))} />
               </label>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  style={{ background: "#0d6efd", color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", cursor: "pointer", fontSize: 14 }}
-                >
-                  {saving ? "Saving..." : "Save"}
+                <button type="submit" disabled={absSaving} style={{ background: "#0d6efd", color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", cursor: "pointer", fontSize: 14 }}>
+                  {absSaving ? "Saving..." : "Save"}
                 </button>
-                <button
-                  type="button"
-                  onClick={checkStatus}
-                  style={{ background: "none", border: `1px solid ${tokens.border}`, borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: tokens.textMuted }}
-                >
+                <button type="button" onClick={checkStatus} style={{ background: "none", border: `1px solid ${tokens.border}`, borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: tokens.textMuted }}>
                   Test connection
                 </button>
-                {saved && <span style={{ fontSize: 13, color: "#198754" }}>Saved</span>}
+                {absSaved && <span style={{ fontSize: 13, color: "#198754" }}>Saved</span>}
               </div>
             </div>
           </form>
         </div>
 
-        {/* Container config — read-only */}
-        {config && (
-          <>
-            <ConfigCard title="Watch Directories" tokens={tokens}>
-              <Row label="Audiobooks" value={config.audiobook_watch_path || "—"} tokens={tokens} />
-              <Row label="Ebooks" value={config.ebook_watch_path || "—"} tokens={tokens} />
-            </ConfigCard>
-            <ConfigCard title="Library Destinations" tokens={tokens}>
-              <Row label="Audiobooks" value={config.audiobook_library_path} tokens={tokens} />
-              <Row label="Ebooks" value={config.ebook_library_path} tokens={tokens} />
-            </ConfigCard>
-            <ConfigCard title="Import Settings" tokens={tokens}>
-              <Row label="Confidence threshold" value={`${Math.round(config.confidence_threshold * 100)}%`} tokens={tokens} />
-              <Row label="Scan interval" value={`${config.poll_interval_seconds}s`} tokens={tokens} />
-            </ConfigCard>
-          </>
+        {/* Scan settings — read-only from env */}
+        {envConfig && (
+          <div style={{ background: tokens.surface, borderRadius: 8, padding: 20, boxShadow: tokens.shadow }}>
+            <div style={{ fontWeight: 600, fontSize: 13, color: tokens.textMuted, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Import Settings</div>
+            <Row label="Confidence threshold" value={`${Math.round(envConfig.confidence_threshold * 100)}%`} tokens={tokens} />
+            <Row label="Scan interval" value={`${envConfig.poll_interval_seconds}s`} tokens={tokens} />
+          </div>
         )}
 
         <div style={{ fontSize: 13, color: tokens.warningText, background: tokens.warningBg, borderRadius: 6, padding: "10px 14px" }}>
-          Watch paths, library paths, and scan settings are configured via <code>appdata/annex/.env</code>. Restart the container after making changes.
+          Confidence threshold and scan interval are configured via <code>appdata/annex/.env</code>. Restart the container after making changes.
         </div>
 
         {/* Import record management */}
@@ -197,40 +212,20 @@ export default function Settings() {
             Clear records from the import history. Files in your library and download folders are not affected.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <button
-              onClick={() => handleClear("failed", ["failed"])}
-              disabled={!!clearing}
-              style={{ background: "none", border: `1px solid ${tokens.border}`, borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: tokens.textMuted }}
-            >
+            <button onClick={() => handleClear("failed", ["failed"])} disabled={!!clearing} style={{ background: "none", border: `1px solid ${tokens.border}`, borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: tokens.textMuted }}>
               {clearing === "failed" ? "Clearing…" : "Clear failed"}
             </button>
-            <button
-              onClick={() => handleClear("needs review", ["needs_review"])}
-              disabled={!!clearing}
-              style={{ background: "none", border: `1px solid ${tokens.border}`, borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: tokens.textMuted }}
-            >
+            <button onClick={() => handleClear("needs review", ["needs_review"])} disabled={!!clearing} style={{ background: "none", border: `1px solid ${tokens.border}`, borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: tokens.textMuted }}>
               {clearing === "needs review" ? "Clearing…" : "Clear needs review"}
             </button>
-            <button
-              onClick={() => handleClear("all")}
-              disabled={!!clearing}
-              style={{ background: "none", border: `1px solid #dc3545`, borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: "#dc3545" }}
-            >
+            <button onClick={() => handleClear("all")} disabled={!!clearing} style={{ background: "none", border: `1px solid #dc3545`, borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: "#dc3545" }}>
               {clearing === "all" ? "Clearing…" : "Clear all"}
             </button>
           </div>
           {clearMsg && <div style={{ marginTop: 10, fontSize: 13, color: "#198754" }}>{clearMsg}</div>}
         </div>
-      </div>
-    </div>
-  );
-}
 
-function ConfigCard({ title, children, tokens }: { title: string; children: React.ReactNode; tokens: ReturnType<typeof useTheme>["tokens"] }) {
-  return (
-    <div style={{ background: tokens.surface, borderRadius: 8, padding: 20, boxShadow: tokens.shadow }}>
-      <div style={{ fontWeight: 600, fontSize: 13, color: tokens.textMuted, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>{title}</div>
-      {children}
+      </div>
     </div>
   );
 }

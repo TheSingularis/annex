@@ -15,10 +15,12 @@ def sanitize(name: str) -> str:
 
 
 def build_target_dir(category: str, author: str, title: str, series: str = "", series_seq: str = "") -> Path:
+    from app.app_settings import load as load_settings
+    s = load_settings()
     if category == "audiobook":
-        base = Path(current_app.config["AUDIOBOOK_LIBRARY_PATH"])
+        base = Path(s.get("audiobook_library_path") or current_app.config["AUDIOBOOK_LIBRARY_PATH"])
     else:
-        base = Path(current_app.config["EBOOK_LIBRARY_PATH"])
+        base = Path(s.get("ebook_library_path") or current_app.config["EBOOK_LIBRARY_PATH"])
 
     author_dir = sanitize(author) or "Unknown Author"
     title_dir = sanitize(title) or "Unknown Title"

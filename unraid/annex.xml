@@ -11,7 +11,7 @@
   <Overview>Watches directories of unorganized ebooks and audiobooks and automatically organizes them into a clean Author/Title library structure using resolved metadata. Files are hardlinked so originals stay in place.</Overview>
   <Category>MediaApp:Books</Category>
   <WebUI>http://[IP]:[PORT:5000]/</WebUI>
-<Icon>https://raw.githubusercontent.com/TheSingularis/annex/main/unraid/icon.png</Icon>
+  <Icon>https://raw.githubusercontent.com/TheSingularis/annex/main/unraid/icon.png</Icon>
   <ExtraParams>--label com.centurylinklabs.watchtower.enable=true</ExtraParams>
   <Requires/>
 
@@ -53,7 +53,7 @@
     Target="/app/data"
     Default="/mnt/user/appdata/annex"
     Mode="rw"
-    Description="Persistent storage for the Annex database."
+    Description="Persistent storage for Annex settings and database."
     Type="Path"
     Display="always"
     Required="true"
@@ -61,10 +61,10 @@
 
   <Config
     Name="Downloads"
-    Target="/mnt/downloads"
+    Target="/downloads"
     Default="/mnt/user/Downloads"
     Mode="ro"
-    Description="Root of your download directory. Annex watches subdirectories within this path."
+    Description="Root of your download directory. Set watch subdirectories in the Annex web UI."
     Type="Path"
     Display="always"
     Required="true"
@@ -72,58 +72,14 @@
 
   <Config
     Name="Library"
-    Target="/mnt/library"
+    Target="/library"
     Default="/mnt/user/data/books"
     Mode="rw"
-    Description="Root of your organized book library. Must be on the same filesystem as Downloads for hardlinks to work."
+    Description="Root of your organized book library. Set library subdirectories in the Annex web UI."
     Type="Path"
     Display="always"
     Required="true"
     Mask="false">/mnt/user/data/books</Config>
-
-  <Config
-    Name="Audiobook Watch Path"
-    Target="AUDIOBOOK_WATCH_PATH"
-    Default="/mnt/downloads/audiobooks"
-    Mode=""
-    Description="Path inside the container to watch for new audiobooks."
-    Type="Variable"
-    Display="always"
-    Required="false"
-    Mask="false">/mnt/downloads/audiobooks</Config>
-
-  <Config
-    Name="Ebook Watch Path"
-    Target="EBOOK_WATCH_PATH"
-    Default="/mnt/downloads/ebooks"
-    Mode=""
-    Description="Path inside the container to watch for new ebooks."
-    Type="Variable"
-    Display="always"
-    Required="false"
-    Mask="false">/mnt/downloads/ebooks</Config>
-
-  <Config
-    Name="Audiobook Library Path"
-    Target="AUDIOBOOK_LIBRARY_PATH"
-    Default="/mnt/library/audiobooks"
-    Mode=""
-    Description="Path inside the container where organized audiobooks will be placed."
-    Type="Variable"
-    Display="always"
-    Required="false"
-    Mask="false">/mnt/library/audiobooks</Config>
-
-  <Config
-    Name="Ebook Library Path"
-    Target="EBOOK_LIBRARY_PATH"
-    Default="/mnt/library/ebooks"
-    Mode=""
-    Description="Path inside the container where organized ebooks will be placed."
-    Type="Variable"
-    Display="always"
-    Required="false"
-    Mask="false">/mnt/library/ebooks</Config>
 
   <Config
     Name="Confidence Threshold"

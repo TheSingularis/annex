@@ -73,9 +73,9 @@ export const api = {
       body: JSON.stringify(statuses ? { statuses } : {}),
     }),
 
-  getSettings: () => request<AbsSettings>("/settings/"),
-  updateSettings: (body: Partial<AbsSettings>) =>
-    request<AbsSettings>("/settings/", { method: "PUT", body: JSON.stringify(body) }),
+  getSettings: () => request<AllSettings>("/settings/"),
+  updateSettings: (body: Partial<AllSettings>) =>
+    request<AllSettings>("/settings/", { method: "PUT", body: JSON.stringify(body) }),
   getAbsStatus: () => request<{ abs: AbsStatus }>("/settings/status"),
 };
 
@@ -85,6 +85,15 @@ export interface AbsSettings {
   abs_audiobook_library_id: string;
   abs_ebook_library_id: string;
 }
+
+export interface PathSettings {
+  audiobook_watch_path: string;
+  ebook_watch_path: string;
+  audiobook_library_path: string;
+  ebook_library_path: string;
+}
+
+export type AllSettings = AbsSettings & PathSettings;
 
 export interface AbsStatus {
   reachable: boolean;

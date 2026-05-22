@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.abs_settings import load, save
+from app.app_settings import load, save
 from app.abs import ABSClient
 
 settings_bp = Blueprint("settings", __name__)

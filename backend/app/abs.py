@@ -4,7 +4,7 @@ from flask import current_app
 
 class ABSClient:
     def __init__(self):
-        from app.abs_settings import load
+        from app.app_settings import load
         cfg = load()
         self.base_url = cfg["abs_host"].rstrip("/")
         self.api_key = cfg["abs_api_key"]

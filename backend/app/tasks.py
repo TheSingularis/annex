@@ -28,9 +28,11 @@ def _is_stable(path: Path) -> bool:
 
 @celery.task(name="app.tasks.scan_watch_dirs")
 def scan_watch_dirs():
+    from app.app_settings import load as load_settings
+    s = load_settings()
     watch_dirs = {
-        "audiobook": current_app.config.get("AUDIOBOOK_WATCH_PATH", ""),
-        "ebook": current_app.config.get("EBOOK_WATCH_PATH", ""),
+        "audiobook": s.get("audiobook_watch_path", ""),
+        "ebook": s.get("ebook_watch_path", ""),
     }
 
     for category, watch_path in watch_dirs.items():

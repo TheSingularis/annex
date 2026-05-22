@@ -9,6 +9,7 @@ export default function Review() {
   const [active, setActive] = useState<Import | null>(null);
   const [form, setForm] = useState({ author: "", title: "", series: "", series_seq: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [retrying, setRetrying] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   const load = () => {
@@ -26,6 +27,16 @@ export default function Review() {
 
   const selectCandidate = (c: Candidate) => {
     setForm({ author: c.author, title: c.title, series: c.series, series_seq: c.series_seq });
+  };
+
+  const handleRetry = async (id: number) => {
+    setRetrying(id);
+    try {
+      await api.retryImport(id);
+      load();
+    } finally {
+      setRetrying(null);
+    }
   };
 
   const handleApprove = async (e: React.FormEvent) => {
@@ -72,7 +83,16 @@ export default function Review() {
                       </div>
                     )}
                   </div>
-                  <button onClick={() => openReview(imp)} style={btnStyle("#0d6efd")}>Review</button>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => openReview(imp)} style={btnStyle("#0d6efd")}>Review</button>
+                    <button
+                      onClick={() => handleRetry(imp.id)}
+                      disabled={retrying === imp.id}
+                      style={btnStyle("#6c757d")}
+                    >
+                      {retrying === imp.id ? "…" : "Retry"}
+                    </button>
+                  </div>
                 </div>
 
                 {candidates.length > 0 && (

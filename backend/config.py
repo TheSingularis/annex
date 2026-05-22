@@ -1,6 +1,9 @@
 import os
 from dotenv import load_dotenv
 
+# Load from appdata first (persists across container updates on Unraid),
+# then fall back to a local .env for development.
+load_dotenv("/app/data/.env")
 load_dotenv()
 
 class Config:

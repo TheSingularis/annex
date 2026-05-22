@@ -99,7 +99,7 @@ export default function Settings() {
           </ConfigCard>
 
           <div style={{ fontSize: 13, color: "#6c757d", background: "#fff3cd", borderRadius: 6, padding: "10px 14px" }}>
-            Configuration is managed via environment variables in <code>.env</code>. Restart the container after making changes.
+            Configuration is managed via <code>appdata/annex/.env</code>. Restart the container after making changes.
           </div>
         </div>
       )}

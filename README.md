@@ -16,10 +16,10 @@ Annex watches directories of unorganized ebooks and audiobooks and automatically
 ## Quick Start
 
 ```bash
-cp backend/.env.example backend/.env
-# edit backend/.env with your paths
 docker compose up -d
 ```
+
+On first run, Annex creates `/mnt/user/appdata/annex/.env` from the example template. Edit that file with your paths and restart the container.
 
 UI available at `http://<host>:5000`.
 

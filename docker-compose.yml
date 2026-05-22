@@ -12,3 +12,5 @@ services:
       - /home/jordan/Docker/library:/mnt/library
     ports:
       - "5000:5000"
+    labels:
+      - com.centurylinklabs.watchtower.enable=true

@@ -5,10 +5,9 @@ config_bp = Blueprint("config", __name__)
 
 @config_bp.get("/")
 def get_config():
-    """Return non-sensitive config values for the UI."""
     return jsonify({
-        "qbit_host": current_app.config["QBIT_HOST"],
-        "qbit_port": current_app.config["QBIT_PORT"],
+        "audiobook_watch_path": current_app.config["AUDIOBOOK_WATCH_PATH"],
+        "ebook_watch_path": current_app.config["EBOOK_WATCH_PATH"],
         "abs_host": current_app.config["ABS_HOST"],
         "audiobook_library_path": current_app.config["AUDIOBOOK_LIBRARY_PATH"],
         "ebook_library_path": current_app.config["EBOOK_LIBRARY_PATH"],

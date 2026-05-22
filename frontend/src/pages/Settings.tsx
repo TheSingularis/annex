@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 interface Config {
-  qbit_host: string;
-  qbit_port: number;
+  audiobook_watch_path: string;
+  ebook_watch_path: string;
   abs_host: string;
   audiobook_library_path: string;
   ebook_library_path: string;
@@ -27,19 +27,20 @@ export default function Settings() {
 
       {loading ? <div>Loading...</div> : !config ? <div style={{ color: "#dc3545" }}>Failed to load config</div> : (
         <div style={{ display: "grid", gap: 16, maxWidth: 600 }}>
-          <ConfigCard title="qBittorrent">
-            <Row label="Host" value={`${config.qbit_host}:${config.qbit_port}`} />
+          <ConfigCard title="Watch Directories">
+            <Row label="Audiobooks" value={config.audiobook_watch_path || "—"} />
+            <Row label="Ebooks" value={config.ebook_watch_path || "—"} />
+          </ConfigCard>
+          <ConfigCard title="Library Destinations">
+            <Row label="Audiobooks" value={config.audiobook_library_path} />
+            <Row label="Ebooks" value={config.ebook_library_path} />
           </ConfigCard>
           <ConfigCard title="Audiobookshelf">
             <Row label="Host" value={config.abs_host} />
           </ConfigCard>
-          <ConfigCard title="Libraries">
-            <Row label="Audiobooks" value={config.audiobook_library_path} />
-            <Row label="Ebooks" value={config.ebook_library_path} />
-          </ConfigCard>
           <ConfigCard title="Import Settings">
             <Row label="Confidence threshold" value={`${Math.round(config.confidence_threshold * 100)}%`} />
-            <Row label="Poll interval" value={`${config.poll_interval_seconds}s`} />
+            <Row label="Scan interval" value={`${config.poll_interval_seconds}s`} />
           </ConfigCard>
           <div style={{ fontSize: 13, color: "#6c757d", background: "#fff3cd", borderRadius: 6, padding: "10px 14px" }}>
             Configuration is managed via environment variables in <code>.env</code>. Restart the container after making changes.

@@ -2,15 +2,15 @@
 
 [![Build & Push](https://github.com/TheSingularis/annex/actions/workflows/docker.yml/badge.svg)](https://github.com/TheSingularis/annex/actions/workflows/docker.yml)
 
-Annex is a self-hosted middleware that sits between qBittorrent and [Audiobookshelf](https://www.audiobookshelf.org/). When a book download completes, Annex automatically resolves metadata, organizes files into your library by Author/Title, and triggers an ABS library scan — without touching the original download (hardlinks preserve seeding).
+Annex is a self-hosted middleware that takes unorganized ebook and audiobook directories and organizes them into your [Audiobookshelf](https://www.audiobookshelf.org/) library by resolving metadata and building a clean `Author/Title/` folder structure. Files are hardlinked rather than copied, so originals stay in place.
 
 ## Features
 
-- Polls qBittorrent for completed `audiobook` and `ebook` category downloads
 - Resolves metadata via [Audnexus](https://github.com/laxamentumtech/audnexus) (audiobooks) and OpenLibrary / Google Books (ebooks)
-- Hardlinks files into `Author/Title/` library structure — originals stay in place for seeding
-- Queues low-confidence matches for manual review via the UI
-- Manual import for books sourced outside qBittorrent
+- Organizes files into `Author/Title/` library structure via hardlinks
+- Polls for new downloads automatically on a configurable interval
+- Queues low-confidence metadata matches for manual review via the UI
+- Manual import for individual files or folders
 - Notifies Audiobookshelf to scan after each import
 - Single Docker container (Flask + Celery + Redis + React UI)
 
@@ -41,15 +41,7 @@ All configuration is via environment variables in `backend/.env`:
 | `AUDIOBOOK_LIBRARY_PATH` | Audiobook library root (inside container) | `/mnt/library/audiobooks` |
 | `EBOOK_LIBRARY_PATH` | Ebook library root (inside container) | `/mnt/library/ebooks` |
 | `CONFIDENCE_THRESHOLD` | Metadata match threshold (0–1) | `0.85` |
-| `POLL_INTERVAL_SECONDS` | How often to poll qBittorrent | `60` |
-
-## qBittorrent Setup
-
-In qBittorrent, create two categories with separate download folders:
-- `audiobook`
-- `ebook`
-
-Annex polls for completed torrents in these categories automatically — no completion scripts needed.
+| `POLL_INTERVAL_SECONDS` | How often to check for new downloads | `60` |
 
 ## Unraid Setup
 
@@ -62,7 +54,7 @@ volumes:
   - /mnt/user/library:/mnt/library
 ```
 
-**Important:** Your downloads folder and library folder must be on the same filesystem for hardlinks to work. If they are on different Unraid shares/pools, hardlinking will fail and Annex will surface the error rather than silently copying.
+**Important:** Your source directories and library must be on the same filesystem for hardlinks to work. If they are on different Unraid shares or pools, Annex will surface an error rather than silently copying.
 
 ### Auto-updates with Watchtower
 

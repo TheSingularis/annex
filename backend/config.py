@@ -11,10 +11,8 @@ class Config:
     CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
     CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
-    QBIT_HOST = os.environ.get("QBIT_HOST", "localhost")
-    QBIT_PORT = int(os.environ.get("QBIT_PORT", 8080))
-    QBIT_USERNAME = os.environ.get("QBIT_USERNAME", "admin")
-    QBIT_PASSWORD = os.environ.get("QBIT_PASSWORD", "")
+    AUDIOBOOK_WATCH_PATH = os.environ.get("AUDIOBOOK_WATCH_PATH", "")
+    EBOOK_WATCH_PATH = os.environ.get("EBOOK_WATCH_PATH", "")
 
     ABS_HOST = os.environ.get("ABS_HOST", "http://localhost:13378")
     ABS_API_KEY = os.environ.get("ABS_API_KEY", "")

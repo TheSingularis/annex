@@ -3,7 +3,7 @@ from pathlib import Path
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models import Import
-from app.tasks import import_torrent, _finalize_import
+from app.tasks import import_item, _finalize_import
 from app.metadata import resolve_metadata
 from app.fileops import discover_files
 
@@ -69,7 +69,7 @@ def manual_import():
             db.session.commit()
             return jsonify({"error": str(e)}), 500
     else:
-        import_torrent.delay(record.id)
+        import_item.delay(record.id)
 
     return jsonify(record.to_dict()), 201
 
@@ -130,5 +130,5 @@ def retry_import(import_id):
     record.status = "pending"
     record.error_message = None
     db.session.commit()
-    import_torrent.delay(record.id)
+    import_item.delay(record.id)
     return jsonify(record.to_dict())

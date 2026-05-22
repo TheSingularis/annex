@@ -25,8 +25,8 @@ def create_app(config_class=Config):
         broker_url=app.config["CELERY_BROKER_URL"],
         result_backend=app.config["CELERY_RESULT_BACKEND"],
         beat_schedule={
-            "poll-qbittorrent": {
-                "task": "app.tasks.poll_qbittorrent",
+            "scan-watch-dirs": {
+                "task": "app.tasks.scan_watch_dirs",
                 "schedule": app.config["POLL_INTERVAL_SECONDS"],
             }
         },

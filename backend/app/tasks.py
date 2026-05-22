@@ -1,50 +1,86 @@
 import json
 import logging
+import time
 from pathlib import Path
+
+from flask import current_app
 
 from app import celery, db
 from app.models import Import
-from app.qbit import QBittorrentClient
 from app.abs import ABSClient
 from app.metadata import resolve_metadata
 from app.fileops import discover_files, build_target_dir, hardlink_files
 
 logger = logging.getLogger(__name__)
 
+# Minimum seconds since last modification before a path is considered stable
+FILE_STABILITY_SECONDS = 60
 
-@celery.task(name="app.tasks.poll_qbittorrent")
-def poll_qbittorrent():
-    client = QBittorrentClient()
+
+def _is_stable(path: Path) -> bool:
+    """Returns True if the path hasn't been modified recently."""
     try:
-        torrents = client.get_completed_torrents(categories=("audiobook", "ebook"))
-    except Exception as e:
-        logger.error(f"qBittorrent poll failed: {e}")
-        return
+        mtime = path.stat().st_mtime
+        return (time.time() - mtime) >= FILE_STABILITY_SECONDS
+    except OSError:
+        return False
 
-    for torrent in torrents:
-        hash_ = torrent.get("hash")
-        if not hash_:
+
+@celery.task(name="app.tasks.scan_watch_dirs")
+def scan_watch_dirs():
+    watch_dirs = {
+        "audiobook": current_app.config.get("AUDIOBOOK_WATCH_PATH", ""),
+        "ebook": current_app.config.get("EBOOK_WATCH_PATH", ""),
+    }
+
+    for category, watch_path in watch_dirs.items():
+        if not watch_path:
             continue
 
-        existing = Import.query.filter_by(hash=hash_).first()
-        if existing:
+        root = Path(watch_path)
+        if not root.is_dir():
+            logger.warning(f"Watch path does not exist: {watch_path}")
             continue
 
-        record = Import(
-            hash=hash_,
-            name=torrent.get("name", ""),
-            category=torrent.get("category", "").lower(),
-            content_path=torrent.get("content_path", ""),
-            status="pending",
+        extensions = (
+            current_app.config["AUDIOBOOK_EXTENSIONS"]
+            if category == "audiobook"
+            else current_app.config["EBOOK_EXTENSIONS"]
         )
-        db.session.add(record)
-        db.session.commit()
 
-        import_torrent.delay(record.id)
+        # Collect top-level entries that contain matching files
+        candidates = set()
+        for item in root.iterdir():
+            if item.is_file() and item.suffix.lower() in extensions:
+                candidates.add(item)
+            elif item.is_dir():
+                if any(f.suffix.lower() in extensions for f in item.rglob("*") if f.is_file()):
+                    candidates.add(item)
+
+        for path in candidates:
+            existing = Import.query.filter_by(content_path=str(path)).first()
+            if existing:
+                continue
+
+            if not _is_stable(path):
+                logger.debug(f"Skipping unstable path: {path}")
+                continue
+
+            record = Import(
+                hash=None,
+                name=path.name,
+                category=category,
+                content_path=str(path),
+                status="pending",
+            )
+            db.session.add(record)
+            db.session.commit()
+
+            import_item.delay(record.id)
 
 
-@celery.task(name="app.tasks.import_torrent")
-def import_torrent(import_id: int):
+@celery.task(name="app.tasks.import_item")
+def import_item(import_id: int):
     record = Import.query.get(import_id)
     if not record:
         return
@@ -62,12 +98,10 @@ def import_torrent(import_id: int):
 
 
 def _run_import(record: Import):
-    # File discovery
     files = discover_files(record.content_path, record.category)
     if not files:
         raise ValueError(f"No matching files found in {record.content_path}")
 
-    # Metadata resolution
     result = resolve_metadata(record.name, record.category)
     record.metadata_confidence = result["confidence"]
     record.candidates_json = json.dumps([

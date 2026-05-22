@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, AbsSettings, AbsStatus } from "../lib/api";
+import { api, AbsSettings, AbsStatus, ImportStatus } from "../lib/api";
 import { useTheme } from "../lib/ThemeContext";
 
 interface Config {
@@ -34,6 +34,8 @@ export default function Settings() {
   const [statusLoading, setStatusLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [clearing, setClearing] = useState<string | null>(null);
+  const [clearMsg, setClearMsg] = useState("");
 
   useEffect(() => {
     fetch("/api/config/").then(r => r.json()).then(setConfig);
@@ -68,6 +70,19 @@ export default function Settings() {
       setTimeout(() => setSaved(false), 3000);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleClear = async (label: string, statuses?: ImportStatus[]) => {
+    if (!confirm(`Clear ${label} import records? This cannot be undone.`)) return;
+    setClearing(label);
+    setClearMsg("");
+    try {
+      const { deleted } = await api.clearImports(statuses);
+      setClearMsg(`Removed ${deleted} record${deleted !== 1 ? "s" : ""}.`);
+      setTimeout(() => setClearMsg(""), 4000);
+    } finally {
+      setClearing(null);
     }
   };
 
@@ -171,6 +186,40 @@ export default function Settings() {
 
         <div style={{ fontSize: 13, color: tokens.warningText, background: tokens.warningBg, borderRadius: 6, padding: "10px 14px" }}>
           Watch paths, library paths, and scan settings are configured via <code>appdata/annex/.env</code>. Restart the container after making changes.
+        </div>
+
+        {/* Import record management */}
+        <div style={{ background: tokens.surface, borderRadius: 8, padding: 20, boxShadow: tokens.shadow }}>
+          <div style={{ fontWeight: 600, fontSize: 13, color: tokens.textMuted, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
+            Import Records
+          </div>
+          <p style={{ fontSize: 13, color: tokens.textMuted, margin: "0 0 14px" }}>
+            Clear records from the import history. Files in your library and download folders are not affected.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <button
+              onClick={() => handleClear("failed", ["failed"])}
+              disabled={!!clearing}
+              style={{ background: "none", border: `1px solid ${tokens.border}`, borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: tokens.textMuted }}
+            >
+              {clearing === "failed" ? "Clearing…" : "Clear failed"}
+            </button>
+            <button
+              onClick={() => handleClear("needs review", ["needs_review"])}
+              disabled={!!clearing}
+              style={{ background: "none", border: `1px solid ${tokens.border}`, borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: tokens.textMuted }}
+            >
+              {clearing === "needs review" ? "Clearing…" : "Clear needs review"}
+            </button>
+            <button
+              onClick={() => handleClear("all")}
+              disabled={!!clearing}
+              style={{ background: "none", border: `1px solid #dc3545`, borderRadius: 6, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: "#dc3545" }}
+            >
+              {clearing === "all" ? "Clearing…" : "Clear all"}
+            </button>
+          </div>
+          {clearMsg && <div style={{ marginTop: 10, fontSize: 13, color: "#198754" }}>{clearMsg}</div>}
         </div>
       </div>
     </div>

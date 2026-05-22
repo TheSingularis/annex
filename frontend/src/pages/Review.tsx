@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { api, Import, Candidate } from "../lib/api";
 import { useTheme } from "../lib/ThemeContext";
+import { useIsMobile } from "../lib/useIsMobile";
 
 export default function Review() {
   const { tokens } = useTheme();
+  const isMobile = useIsMobile();
   const [imports, setImports] = useState<Import[]>([]);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState<Import | null>(null);
@@ -113,7 +115,7 @@ export default function Review() {
 
       {active && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-          <div style={{ background: tokens.surface, borderRadius: 10, padding: 32, width: 520, maxHeight: "90vh", overflow: "auto", boxShadow: "0 8px 32px rgba(0,0,0,.3)" }}>
+          <div style={{ background: tokens.surface, borderRadius: isMobile ? 0 : 10, padding: isMobile ? 20 : 32, width: isMobile ? "100%" : 520, maxHeight: isMobile ? "100%" : "90vh", height: isMobile ? "100%" : undefined, overflow: "auto", boxShadow: "0 8px 32px rgba(0,0,0,.3)" }}>
             <h2 style={{ margin: "0 0 8px", color: tokens.text }}>Resolve Metadata</h2>
             <div style={{ fontSize: 13, color: tokens.textMuted, marginBottom: 20 }}>{active.name}</div>
 

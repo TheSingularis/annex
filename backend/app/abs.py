@@ -4,8 +4,8 @@ from flask import current_app
 
 class ABSClient:
     def __init__(self):
-        from app.models import AppSettings
-        cfg = AppSettings.get_abs_config()
+        from app.abs_settings import load
+        cfg = load()
         self.base_url = cfg["abs_host"].rstrip("/")
         self.api_key = cfg["abs_api_key"]
         self.audiobook_library_id = cfg["abs_audiobook_library_id"]

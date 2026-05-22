@@ -20,6 +20,8 @@ app = create_app()
 # Always run on startup regardless of how the app is launched (gunicorn or direct)
 with app.app_context():
     db.create_all()
+    from app.abs_settings import migrate_from_db
+    migrate_from_db()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

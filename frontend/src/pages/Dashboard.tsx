@@ -142,7 +142,8 @@ export default function Dashboard() {
 
       {loading ? <div style={{ color: tokens.textMuted }}>Loading...</div> : (
         <div style={{ background: tokens.surface, borderRadius: 8, boxShadow: tokens.shadow, overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+          <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, minWidth: 680 }}>
             <thead>
               <tr style={{ background: tokens.surfaceHover }}>
                 {["Name", "Category", "Status", "Author", "Title", "Confidence", "Added", ""].map(h => (
@@ -191,6 +192,7 @@ export default function Dashboard() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

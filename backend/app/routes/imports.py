@@ -142,6 +142,18 @@ def approve_import(import_id):
     return jsonify(record.to_dict())
 
 
+@imports_bp.post("/clear")
+def clear_imports():
+    data = request.get_json(force=True) or {}
+    statuses = data.get("statuses")  # list of status strings, or omit for all
+    query = Import.query
+    if statuses:
+        query = query.filter(Import.status.in_(statuses))
+    count = query.delete(synchronize_session=False)
+    db.session.commit()
+    return jsonify({"deleted": count})
+
+
 @imports_bp.post("/<int:import_id>/retry")
 def retry_import(import_id):
     record = Import.query.get_or_404(import_id)

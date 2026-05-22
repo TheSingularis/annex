@@ -67,6 +67,12 @@ export const api = {
   triggerScan: () =>
     request<{ status: string }>("/imports/scan", { method: "POST" }),
 
+  clearImports: (statuses?: ImportStatus[]) =>
+    request<{ deleted: number }>("/imports/clear", {
+      method: "POST",
+      body: JSON.stringify(statuses ? { statuses } : {}),
+    }),
+
   getSettings: () => request<AbsSettings>("/settings/"),
   updateSettings: (body: Partial<AbsSettings>) =>
     request<AbsSettings>("/settings/", { method: "PUT", body: JSON.stringify(body) }),

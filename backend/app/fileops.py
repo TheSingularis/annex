@@ -49,26 +49,32 @@ def discover_files(content_path: str, category: str) -> list[Path]:
 
 def hardlink_files(source_files: list[Path], target_dir: Path, title: str) -> list[Path]:
     """
-    Creates hardlinks of source_files into target_dir.
-    Single file: renamed to {title}{ext}.
-    Multiple files: original filenames preserved.
-    Raises OSError on cross-device link attempt.
+    Links source_files into target_dir via hardlink, falling back to symlink
+    if source and destination are on different devices (common on Unraid).
+    Single file: renamed to {title}{ext}. Multiple files: original names kept.
     """
     target_dir.mkdir(parents=True, exist_ok=True)
     linked = []
 
-    for i, src in enumerate(source_files):
+    for src in source_files:
         if len(source_files) == 1:
             dst = target_dir / f"{sanitize(title)}{src.suffix.lower()}"
         else:
             dst = target_dir / src.name
 
         if dst.exists():
-            current_app.logger.info(f"Hardlink target already exists, skipping: {dst}")
+            current_app.logger.info(f"Link target already exists, skipping: {dst}")
             linked.append(dst)
             continue
 
-        os.link(src, dst)
+        try:
+            os.link(src, dst)
+        except OSError as e:
+            if e.errno != 18:  # 18 = EXDEV (cross-device link)
+                raise
+            current_app.logger.info(f"Cross-device: symlinking instead of hardlinking {src.name}")
+            os.symlink(src, dst)
+
         linked.append(dst)
 
     return linked

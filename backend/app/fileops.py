@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 from pathlib import Path
 from flask import current_app
 
@@ -49,7 +50,7 @@ def discover_files(content_path: str, category: str) -> list[Path]:
 
 def hardlink_files(source_files: list[Path], target_dir: Path, title: str) -> list[Path]:
     """
-    Links source_files into target_dir via hardlink, falling back to symlink
+    Links source_files into target_dir via hardlink, falling back to copy
     if source and destination are on different devices (common on Unraid).
     Single file: renamed to {title}{ext}. Multiple files: original names kept.
     """
@@ -72,8 +73,8 @@ def hardlink_files(source_files: list[Path], target_dir: Path, title: str) -> li
         except OSError as e:
             if e.errno != 18:  # 18 = EXDEV (cross-device link)
                 raise
-            current_app.logger.info(f"Cross-device: symlinking instead of hardlinking {src.name}")
-            os.symlink(src, dst)
+            current_app.logger.info(f"Cross-device: copying instead of hardlinking {src.name}")
+            shutil.copy2(src, dst)
 
         linked.append(dst)
 

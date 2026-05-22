@@ -25,6 +25,13 @@ def get_import(import_id):
     return jsonify(record.to_dict())
 
 
+@imports_bp.post("/scan")
+def trigger_scan():
+    from app.tasks import scan_watch_dirs
+    scan_watch_dirs.delay()
+    return jsonify({"status": "scan queued"})
+
+
 @imports_bp.post("/manual")
 def manual_import():
     data = request.get_json(force=True)
@@ -51,7 +58,6 @@ def manual_import():
     db.session.commit()
 
     if author and title:
-        # Skip metadata lookup — user provided full details
         files = discover_files(path, category)
         if not files:
             record.status = "failed"
@@ -59,7 +65,15 @@ def manual_import():
             db.session.commit()
             return jsonify({"error": record.error_message}), 400
 
-        match = {"author": author, "title": title, "series": "", "series_seq": ""}
+        # Still query APIs to pick up series data
+        meta = resolve_metadata(f"{author} {title}", category)
+        top = meta["candidates"][0] if meta["candidates"] else {}
+        match = {
+            "author": author,
+            "title": title,
+            "series": top.get("series", ""),
+            "series_seq": top.get("series_seq", ""),
+        }
         record.metadata_confidence = 1.0
         try:
             _finalize_import(record, match, files)
@@ -108,6 +122,13 @@ def approve_import(import_id):
         record.error_message = "No matching files found at original path"
         db.session.commit()
         return jsonify({"error": record.error_message}), 400
+
+    # If series wasn't explicitly set, query APIs to fill it in
+    if not series and not series_seq:
+        meta = resolve_metadata(f"{author} {title}", record.category)
+        top = meta["candidates"][0] if meta["candidates"] else {}
+        series = top.get("series", "")
+        series_seq = top.get("series_seq", "")
 
     match = {"author": author, "title": title, "series": series, "series_seq": series_seq}
     try:

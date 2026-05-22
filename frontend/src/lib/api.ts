@@ -64,6 +64,9 @@ export const api = {
   retryImport: (id: number) =>
     request<Import>(`/imports/${id}/retry`, { method: "POST" }),
 
+  triggerScan: () =>
+    request<{ status: string }>("/imports/scan", { method: "POST" }),
+
   getSettings: () => request<AbsSettings>("/settings/"),
   updateSettings: (body: Partial<AbsSettings>) =>
     request<AbsSettings>("/settings/", { method: "PUT", body: JSON.stringify(body) }),

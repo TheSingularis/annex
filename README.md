@@ -25,20 +25,29 @@ UI available at `http://<host>:5000`.
 
 ## Configuration
 
-All configuration is via environment variables in `backend/.env`:
+### Your setup
+
+These tell Annex where your files live. Set these to match your directory structure.
+
+| Variable | Description |
+|---|---|
+| `AUDIOBOOK_WATCH_PATH` | Directory to watch for new audiobooks (inside container) |
+| `EBOOK_WATCH_PATH` | Directory to watch for new ebooks (inside container) |
+| `AUDIOBOOK_LIBRARY_PATH` | Where organized audiobooks will be placed (inside container) |
+| `EBOOK_LIBRARY_PATH` | Where organized ebooks will be placed (inside container) |
+
+### App settings
+
+Tuneable but work out of the box.
 
 | Variable | Description | Default |
 |---|---|---|
-| `AUDIOBOOK_WATCH_PATH` | Directory to watch for new audiobooks (inside container) | |
-| `EBOOK_WATCH_PATH` | Directory to watch for new ebooks (inside container) | |
-| `AUDIOBOOK_LIBRARY_PATH` | Organized audiobook library destination (inside container) | `/mnt/library/audiobooks` |
-| `EBOOK_LIBRARY_PATH` | Organized ebook library destination (inside container) | `/mnt/library/ebooks` |
-| `CONFIDENCE_THRESHOLD` | Metadata match threshold (0–1). Below this, item is queued for review | `0.85` |
+| `CONFIDENCE_THRESHOLD` | Metadata match score (0–1). Below this, item is queued for manual review | `0.85` |
 | `POLL_INTERVAL_SECONDS` | How often to scan watch directories | `60` |
 
 ### Optional — Audiobookshelf integration
 
-When configured, Annex will trigger an ABS library scan after each successful import.
+When configured, Annex triggers an ABS library scan after each successful import.
 
 | Variable | Description |
 |---|---|
@@ -57,19 +66,6 @@ volumes:
 ```
 
 **Important:** Watch directories and library destinations must be on the same filesystem for hardlinks to work.
-
-### Auto-updates with Watchtower
-
-```yaml
-watchtower:
-  image: containrrr/watchtower
-  volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-  environment:
-    - WATCHTOWER_POLL_INTERVAL=3600
-    - WATCHTOWER_CLEANUP=true
-  restart: unless-stopped
-```
 
 ## Development
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, Import, Candidate } from "../lib/api";
 import { useTheme } from "../lib/ThemeContext";
 import { useIsMobile } from "../lib/useIsMobile";
@@ -14,12 +14,27 @@ export default function Review() {
   const [retrying, setRetrying] = useState<number | null>(null);
   const [error, setError] = useState("");
 
-  const load = () => {
-    setLoading(true);
-    api.listImports("needs_review").then(setImports).finally(() => setLoading(false));
+  const activeRef = useRef(active);
+  activeRef.current = active;
+
+  const load = (silent = false) => {
+    if (!silent) setLoading(true);
+    api.listImports("needs_review").then(data => {
+      setImports(data);
+      // Refresh the active item in place if the modal is open
+      if (activeRef.current) {
+        const updated = data.find(i => i.id === activeRef.current!.id);
+        if (updated) setActive(updated);
+        else setActive(null);
+      }
+    }).finally(() => { if (!silent) setLoading(false); });
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const timer = setInterval(() => load(true), 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const openReview = (imp: Import) => {
     setActive(imp);

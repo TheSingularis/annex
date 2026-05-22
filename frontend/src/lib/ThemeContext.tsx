@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Theme, ThemeTokens, themes, getSavedTheme, saveTheme } from "./theme";
 
 interface ThemeContextValue {
@@ -11,6 +11,10 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(getSavedTheme);
+
+  useEffect(() => {
+    document.body.style.background = themes[theme].bg;
+  }, [theme]);
 
   const toggle = () => {
     setTheme(t => {

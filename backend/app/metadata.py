@@ -16,22 +16,28 @@ _BRACKET_RE = re.compile(r"[\[\(][^\]\)]*[\]\)]")
 _PUNCT_RE = re.compile(r"[_\-\.]+")
 
 
+def _clean(s: str) -> str:
+    s = _JUNK_RE.sub(" ", s)
+    s = _PUNCT_RE.sub(" ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
 def parse_torrent_name(name: str) -> dict:
     """Best-effort extraction of author and title from a torrent name."""
+    # Remove bracketed content first
     cleaned = _BRACKET_RE.sub(" ", name)
-    cleaned = _JUNK_RE.sub(" ", cleaned)
-    cleaned = _PUNCT_RE.sub(" ", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
 
-    # Common pattern: "Author Name - Title" or "Title - Author Name"
+    # Split on " - " BEFORE _PUNCT_RE eats the dash
     if " - " in cleaned:
         parts = [p.strip() for p in cleaned.split(" - ", 1)]
+        left, right = _clean(parts[0]), _clean(parts[1])
         # Heuristic: shorter part is more likely the author (names are short)
-        if len(parts[0].split()) <= 3:
-            return {"author": parts[0], "title": parts[1]}
-        return {"author": parts[1], "title": parts[0]}
+        if len(left.split()) <= 3:
+            return {"author": left, "title": right}
+        return {"author": right, "title": left}
 
-    return {"author": "", "title": cleaned}
+    return {"author": "", "title": _clean(cleaned)}
 
 
 # --- Metadata clients ---
@@ -47,30 +53,29 @@ def _score(candidate: dict, parsed: dict) -> float:
     return title_score * 0.65 + author_score * 0.35
 
 
-def _search_audnexus(query: str) -> list:
+def _search_itunes(query: str) -> list:
     try:
         resp = requests.get(
-            "https://api.audnex.us/books",
-            params={"query": query},
+            "https://itunes.apple.com/search",
+            params={"term": query, "media": "audiobook", "entity": "audiobook", "limit": 5},
             timeout=10,
         )
         resp.raise_for_status()
         data = resp.json()
         results = []
-        for item in data[:5]:
+        for item in data.get("results", [])[:5]:
+            title = item.get("trackName") or item.get("collectionName", "")
             results.append({
-                "title": item.get("title", ""),
-                "author": ", ".join(
-                    [a.get("name", "") for a in item.get("authors", [])]
-                ),
-                "series": item.get("seriesPrimary", {}).get("name", "") if item.get("seriesPrimary") else "",
-                "series_seq": str(item.get("seriesPrimary", {}).get("position", "")) if item.get("seriesPrimary") else "",
-                "source": "audnexus",
+                "title": title,
+                "author": item.get("artistName", ""),
+                "series": "",
+                "series_seq": "",
+                "source": "itunes",
                 "raw": item,
             })
         return results
     except Exception as e:
-        current_app.logger.warning(f"Audnexus search failed: {e}")
+        current_app.logger.warning(f"iTunes audiobook search failed: {e}")
         return []
 
 
@@ -138,7 +143,9 @@ def resolve_metadata(torrent_name: str, category: str) -> dict:
     query = f"{parsed['author']} {parsed['title']}".strip()
 
     if category == "audiobook":
-        candidates = _search_audnexus(query)
+        candidates = _search_itunes(query)
+        if not candidates:
+            candidates = _search_googlebooks(query)
     else:
         candidates = _search_openlibrary(query)
         if not candidates:

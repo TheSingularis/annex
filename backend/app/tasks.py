@@ -104,7 +104,17 @@ def _run_import(record: Import):
     if not files:
         raise ValueError(f"No matching files found in {record.content_path}")
 
-    result = resolve_metadata(record.name, record.category)
+    hint_author = ""
+    if record.category == "audiobook":
+        try:
+            from app.audiofile import read_author
+            hint_author = read_author(files)
+            if hint_author:
+                logger.debug(f"File metadata author for {record.name!r}: {hint_author!r}")
+        except Exception as e:
+            logger.debug(f"Could not read file metadata: {e}")
+
+    result = resolve_metadata(record.name, record.category, hint_author=hint_author)
     record.metadata_confidence = result["confidence"]
     record.candidates_json = json.dumps([
         {k: v for k, v in c.items() if k != "raw"}

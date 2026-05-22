@@ -2,6 +2,36 @@ from datetime import datetime, timezone
 from app import db
 
 
+class AppSettings(db.Model):
+    __tablename__ = "app_settings"
+
+    key = db.Column(db.Text, primary_key=True)
+    value = db.Column(db.Text, nullable=False, default="")
+
+    @classmethod
+    def get(cls, key: str, default: str = "") -> str:
+        row = cls.query.get(key)
+        return row.value if row else default
+
+    @classmethod
+    def set(cls, key: str, value: str):
+        row = cls.query.get(key)
+        if row:
+            row.value = value
+        else:
+            db.session.add(cls(key=key, value=value))
+        db.session.commit()
+
+    @classmethod
+    def get_abs_config(cls) -> dict:
+        return {
+            "abs_host": cls.get("abs_host"),
+            "abs_api_key": cls.get("abs_api_key"),
+            "abs_audiobook_library_id": cls.get("abs_audiobook_library_id"),
+            "abs_ebook_library_id": cls.get("abs_ebook_library_id"),
+        }
+
+
 class Import(db.Model):
     __tablename__ = "imports"
 

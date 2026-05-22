@@ -11,12 +11,10 @@
   <Overview>Watches directories of unorganized ebooks and audiobooks and automatically organizes them into a clean Author/Title library structure using resolved metadata. Files are hardlinked so originals stay in place.</Overview>
   <Category>MediaApp:Books</Category>
   <WebUI>http://[IP]:[PORT:5000]/</WebUI>
-  <TemplateURL>https://raw.githubusercontent.com/TheSingularis/annex/main/unraid/annex.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/TheSingularis/annex/main/unraid/icon.png</Icon>
+<Icon>https://raw.githubusercontent.com/TheSingularis/annex/main/unraid/icon.png</Icon>
   <ExtraParams>--label com.centurylinklabs.watchtower.enable=true</ExtraParams>
   <Requires/>
 
-  <!-- Ports -->
   <Config
     Name="Web UI Port"
     Target="5000"
@@ -28,7 +26,6 @@
     Required="true"
     Mask="false">5000</Config>
 
-  <!-- Paths -->
   <Config
     Name="AppData"
     Target="/app/data"
@@ -43,26 +40,25 @@
   <Config
     Name="Downloads"
     Target="/mnt/downloads"
-    Default=""
+    Default="/mnt/user/Downloads"
     Mode="ro"
     Description="Root of your download directory. Annex watches subdirectories within this path."
     Type="Path"
     Display="always"
     Required="true"
-    Mask="false"></Config>
+    Mask="false">/mnt/user/Downloads</Config>
 
   <Config
     Name="Library"
     Target="/mnt/library"
-    Default=""
+    Default="/mnt/user/data/books"
     Mode="rw"
     Description="Root of your organized book library. Must be on the same filesystem as Downloads for hardlinks to work."
     Type="Path"
     Display="always"
     Required="true"
-    Mask="false"></Config>
+    Mask="false">/mnt/user/data/books</Config>
 
-  <!-- Watch paths -->
   <Config
     Name="Audiobook Watch Path"
     Target="AUDIOBOOK_WATCH_PATH"
@@ -85,7 +81,6 @@
     Required="false"
     Mask="false">/mnt/downloads/ebooks</Config>
 
-  <!-- Library destinations -->
   <Config
     Name="Audiobook Library Path"
     Target="AUDIOBOOK_LIBRARY_PATH"
@@ -108,13 +103,12 @@
     Required="false"
     Mask="false">/mnt/library/ebooks</Config>
 
-  <!-- Import settings -->
   <Config
     Name="Confidence Threshold"
     Target="CONFIDENCE_THRESHOLD"
     Default="0.85"
     Mode=""
-    Description="Metadata match confidence (0–1). Items below this score are queued for manual review."
+    Description="Metadata match confidence (0-1). Items below this score are queued for manual review."
     Type="Variable"
     Display="advanced"
     Required="false"
@@ -131,48 +125,4 @@
     Required="false"
     Mask="false">60</Config>
 
-  <!-- Audiobookshelf (optional) -->
-  <Config
-    Name="ABS Host"
-    Target="ABS_HOST"
-    Default=""
-    Mode=""
-    Description="[Optional] Audiobookshelf URL. When set, Annex triggers a library scan after each import."
-    Type="Variable"
-    Display="always"
-    Required="false"
-    Mask="false"></Config>
-
-  <Config
-    Name="ABS API Key"
-    Target="ABS_API_KEY"
-    Default=""
-    Mode=""
-    Description="[Optional] Audiobookshelf API key."
-    Type="Variable"
-    Display="always"
-    Required="false"
-    Mask="true"></Config>
-
-  <Config
-    Name="ABS Audiobook Library ID"
-    Target="ABS_AUDIOBOOK_LIBRARY_ID"
-    Default=""
-    Mode=""
-    Description="[Optional] Audiobookshelf audiobook library ID."
-    Type="Variable"
-    Display="always"
-    Required="false"
-    Mask="false"></Config>
-
-  <Config
-    Name="ABS Ebook Library ID"
-    Target="ABS_EBOOK_LIBRARY_ID"
-    Default=""
-    Mode=""
-    Description="[Optional] Audiobookshelf ebook library ID."
-    Type="Variable"
-    Display="always"
-    Required="false"
-    Mask="false"></Config>
 </Container>

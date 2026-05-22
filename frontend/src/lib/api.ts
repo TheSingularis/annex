@@ -63,4 +63,22 @@ export const api = {
 
   retryImport: (id: number) =>
     request<Import>(`/imports/${id}/retry`, { method: "POST" }),
+
+  getSettings: () => request<AbsSettings>("/settings/"),
+  updateSettings: (body: Partial<AbsSettings>) =>
+    request<AbsSettings>("/settings/", { method: "PUT", body: JSON.stringify(body) }),
+  getAbsStatus: () => request<{ abs: AbsStatus }>("/settings/status"),
 };
+
+export interface AbsSettings {
+  abs_host: string;
+  abs_api_key: string;
+  abs_audiobook_library_id: string;
+  abs_ebook_library_id: string;
+}
+
+export interface AbsStatus {
+  reachable: boolean;
+  authenticated: boolean;
+  error: string | null;
+}

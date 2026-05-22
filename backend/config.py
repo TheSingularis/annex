@@ -17,11 +17,6 @@ class Config:
     AUDIOBOOK_WATCH_PATH = os.environ.get("AUDIOBOOK_WATCH_PATH", "")
     EBOOK_WATCH_PATH = os.environ.get("EBOOK_WATCH_PATH", "")
 
-    ABS_HOST = os.environ.get("ABS_HOST", "http://localhost:13378")
-    ABS_API_KEY = os.environ.get("ABS_API_KEY", "")
-    ABS_AUDIOBOOK_LIBRARY_ID = os.environ.get("ABS_AUDIOBOOK_LIBRARY_ID", "")
-    ABS_EBOOK_LIBRARY_ID = os.environ.get("ABS_EBOOK_LIBRARY_ID", "")
-
     AUDIOBOOK_LIBRARY_PATH = os.environ.get("AUDIOBOOK_LIBRARY_PATH", "/mnt/library/audiobooks")
     EBOOK_LIBRARY_PATH = os.environ.get("EBOOK_LIBRARY_PATH", "/mnt/library/ebooks")
 

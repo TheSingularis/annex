@@ -41,9 +41,11 @@ def create_app(config_class=Config):
 
     from app.routes.imports import imports_bp
     from app.routes.config import config_bp
+    from app.routes.settings import settings_bp
 
     app.register_blueprint(imports_bp, url_prefix="/api/imports")
     app.register_blueprint(config_bp, url_prefix="/api/config")
+    app.register_blueprint(settings_bp, url_prefix="/api/settings")
 
     @app.route("/", defaults={"path": ""})
     @app.route("/<path:path>")

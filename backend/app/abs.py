@@ -4,8 +4,12 @@ from flask import current_app
 
 class ABSClient:
     def __init__(self):
-        self.base_url = current_app.config["ABS_HOST"].rstrip("/")
-        self.api_key = current_app.config["ABS_API_KEY"]
+        from app.models import AppSettings
+        cfg = AppSettings.get_abs_config()
+        self.base_url = cfg["abs_host"].rstrip("/")
+        self.api_key = cfg["abs_api_key"]
+        self.audiobook_library_id = cfg["abs_audiobook_library_id"]
+        self.ebook_library_id = cfg["abs_ebook_library_id"]
         self.headers = {"Authorization": f"Bearer {self.api_key}"}
 
     def check_connection(self) -> dict:
@@ -39,10 +43,7 @@ class ABSClient:
         return {"reachable": True, "authenticated": True, "error": None}
 
     def scan_library(self, category: str):
-        if category == "audiobook":
-            library_id = current_app.config["ABS_AUDIOBOOK_LIBRARY_ID"]
-        else:
-            library_id = current_app.config["ABS_EBOOK_LIBRARY_ID"]
+        library_id = self.audiobook_library_id if category == "audiobook" else self.ebook_library_id
 
         if not library_id:
             current_app.logger.warning(f"No ABS library ID configured for category: {category}")

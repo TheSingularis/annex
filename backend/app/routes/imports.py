@@ -16,7 +16,7 @@ def list_imports():
     query = Import.query.order_by(Import.created_at.desc())
     if status:
         query = query.filter_by(status=status)
-    return jsonify([i.to_dict() for i in query.limit(200).all()])
+    return jsonify([i.to_dict() for i in query.all()])
 
 
 @imports_bp.get("/<int:import_id>")

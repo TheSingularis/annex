@@ -20,7 +20,11 @@ function StatusBadge({ status }: { status: ImportStatus }) {
 
 export default function Dashboard() {
   const { tokens } = useTheme();
+  const PER_PAGE = 50;
+  const STATUS_ORDER: Record<string, number> = { importing: 0, pending: 1, needs_review: 2, failed: 3, imported: 4 };
   const [imports, setImports] = useState<Import[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [showManual, setShowManual] = useState(false);
@@ -31,7 +35,7 @@ export default function Dashboard() {
 
   const load = () => {
     setLoading(true);
-    api.listImports().then(setImports).finally(() => setLoading(false));
+    api.listImports().then(data => { setImports(data); setPage(1); }).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
@@ -140,7 +144,30 @@ export default function Dashboard() {
         </div>
       )}
 
-      {loading ? <div style={{ color: tokens.textMuted }}>Loading...</div> : (
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        {(["all", "importing", "pending", "needs_review", "failed", "imported"] as const).map(s => (
+          <button
+            key={s}
+            onClick={() => { setStatusFilter(s); setPage(1); }}
+            style={{
+              background: statusFilter === s ? "#0d6efd" : "none",
+              color: statusFilter === s ? "#fff" : tokens.textMuted,
+              border: `1px solid ${statusFilter === s ? "#0d6efd" : tokens.border}`,
+              borderRadius: 6, padding: "5px 12px", cursor: "pointer", fontSize: 13,
+            }}
+          >
+            {s === "all" ? "All" : s.replace("_", " ")}
+            {s !== "all" && counts[s] ? ` (${counts[s]})` : ""}
+          </button>
+        ))}
+      </div>
+
+      {loading ? <div style={{ color: tokens.textMuted }}>Loading...</div> : (() => {
+        const filtered = statusFilter === "all" ? imports : imports.filter(i => i.status === statusFilter);
+        const sorted = [...filtered].sort((a, b) => (STATUS_ORDER[a.status] ?? 5) - (STATUS_ORDER[b.status] ?? 5));
+        const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
+        const pageImports = sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+        return (
         <div style={{ background: tokens.surface, borderRadius: 8, boxShadow: tokens.shadow, overflow: "hidden" }}>
           <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, minWidth: 680 }}>
@@ -152,7 +179,7 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {imports.map((imp, i) => (
+              {pageImports.map((imp, i) => (
                 <>
                   <tr key={imp.id} style={{ borderTop: `1px solid ${tokens.border}`, background: i % 2 === 0 ? tokens.surface : tokens.surfaceHover }}>
                     <td style={{ padding: "10px 14px", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: tokens.text }} title={imp.name}>{imp.name}</td>
@@ -187,14 +214,27 @@ export default function Dashboard() {
                   )}
                 </>
               ))}
-              {imports.length === 0 && (
-                <tr><td colSpan={7} style={{ padding: 32, textAlign: "center", color: tokens.textMuted }}>No imports yet</td></tr>
+              {pageImports.length === 0 && (
+                <tr><td colSpan={8} style={{ padding: 32, textAlign: "center", color: tokens.textMuted }}>No imports yet</td></tr>
               )}
             </tbody>
           </table>
           </div>
+          {totalPages > 1 && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", borderTop: `1px solid ${tokens.border}` }}>
+              <span style={{ fontSize: 13, color: tokens.textMuted }}>
+                {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, sorted.length)} of {sorted.length}
+              </span>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ background: "none", border: `1px solid ${tokens.border}`, borderRadius: 5, padding: "4px 10px", cursor: page === 1 ? "default" : "pointer", fontSize: 13, color: page === 1 ? tokens.textMuted : tokens.text, opacity: page === 1 ? 0.4 : 1 }}>←</button>
+                <span style={{ fontSize: 13, color: tokens.textMuted, padding: "4px 6px" }}>Page {page} of {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ background: "none", border: `1px solid ${tokens.border}`, borderRadius: 5, padding: "4px 10px", cursor: page === totalPages ? "default" : "pointer", fontSize: 13, color: page === totalPages ? tokens.textMuted : tokens.text, opacity: page === totalPages ? 0.4 : 1 }}>→</button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

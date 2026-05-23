@@ -152,7 +152,9 @@ def _search_and_score(author: str, title: str, category: str) -> list:
     parsed = {"author": author, "title": title}
 
     if category == "audiobook":
-        candidates = _search_itunes(query)
+        candidates = _search_audible(query)
+        if not candidates:
+            candidates = _search_itunes(query)
         if not candidates:
             candidates = _search_googlebooks(query)
     else:
@@ -171,6 +173,40 @@ def _search_and_score(author: str, title: str, category: str) -> list:
 
 
 # --- Metadata API clients ---
+
+def _search_audible(query: str) -> list:
+    try:
+        resp = requests.get(
+            "https://api.audible.com/1.0/catalog/products",
+            params={
+                "keywords": query,
+                "num_results": 5,
+                "response_groups": "contributors,product_desc,product_attrs,series",
+            },
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        results = []
+        for product in data.get("products", [])[:5]:
+            authors = [a["name"] for a in product.get("authors", []) if a.get("name")]
+            series_list = product.get("series", [])
+            series = series_list[0].get("title", "") if series_list else ""
+            series_seq = series_list[0].get("sequence", "") if series_list else ""
+            results.append({
+                "title": product.get("title", ""),
+                "author": ", ".join(authors),
+                "series": series,
+                "series_seq": series_seq,
+                "source": "audible",
+                "raw": product,
+            })
+        return results
+    except Exception as e:
+        current_app.logger.warning(f"Audible search failed: {e}")
+        return []
+
 
 def _search_itunes(query: str) -> list:
     try:

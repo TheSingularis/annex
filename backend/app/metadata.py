@@ -144,6 +144,32 @@ def _score(candidate: dict, parsed: dict) -> float:
     return title_s * 0.65 + author_s * 0.35
 
 
+# --- Search + score helpers ---
+
+def _search_and_score(author: str, title: str, category: str) -> list:
+    """Run the appropriate API search and return scored candidates, best first."""
+    query = f"{author} {title}".strip()
+    parsed = {"author": author, "title": title}
+
+    if category == "audiobook":
+        candidates = _search_itunes(query)
+        if not candidates:
+            candidates = _search_googlebooks(query)
+    else:
+        candidates = _search_openlibrary(query)
+        if not candidates:
+            candidates = _search_googlebooks(query)
+
+    if not candidates:
+        return []
+
+    return sorted(
+        [{"score": _score(c, parsed), **c} for c in candidates],
+        key=lambda x: x["score"],
+        reverse=True,
+    )
+
+
 # --- Metadata API clients ---
 
 def _search_itunes(query: str) -> list:
@@ -241,25 +267,19 @@ def resolve_metadata(torrent_name: str, category: str, hint_author: str = "") ->
     if hint_author and not parsed["author"]:
         parsed["author"] = hint_author.strip()
 
-    query = f"{parsed['author']} {parsed['title']}".strip()
+    scored = _search_and_score(parsed["author"], parsed["title"], category)
 
-    if category == "audiobook":
-        candidates = _search_itunes(query)
-        if not candidates:
-            candidates = _search_googlebooks(query)
-    else:
-        candidates = _search_openlibrary(query)
-        if not candidates:
-            candidates = _search_googlebooks(query)
+    # When the filename had a clear Author - Title split, also try the reversed
+    # interpretation (Title - Author) and take whichever direction scores higher.
+    # This handles cases where the heuristic guessed wrong (e.g. equal word counts,
+    # or a short title that looks like a name).
+    if parsed["author"] and parsed["title"]:
+        flipped = _search_and_score(parsed["title"], parsed["author"], category)
+        if flipped and (not scored or flipped[0]["score"] > scored[0]["score"]):
+            scored = flipped
 
-    if not candidates:
+    if not scored:
         return {"confidence": 0.0, "match": None, "candidates": []}
-
-    scored = sorted(
-        [{"score": _score(c, parsed), **c} for c in candidates],
-        key=lambda x: x["score"],
-        reverse=True,
-    )
 
     top = scored[0]
     threshold = current_app.config["CONFIDENCE_THRESHOLD"]

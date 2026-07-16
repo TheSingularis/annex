@@ -10,6 +10,10 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-me")
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:////app/data/annex.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Multiple processes (gunicorn x2, celery worker x2, beat) share one
+    # sqlite file; the sqlite3 default 5s lock-wait is too short for bursts
+    # of concurrent commits (e.g. a scan discovering hundreds of new files).
+    SQLALCHEMY_ENGINE_OPTIONS = {"connect_args": {"timeout": 30}}
 
     CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
     CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://localhost:6379/0")

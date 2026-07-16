@@ -1,8 +1,10 @@
 import json
 import logging
 import time
+from itertools import zip_longest
 from pathlib import Path
 
+from celery.signals import worker_ready
 from flask import current_app
 
 from app import celery, db
@@ -26,6 +28,18 @@ def _is_stable(path: Path) -> bool:
         return False
 
 
+def _dispatch_interleaved(ids_by_category: dict):
+    """
+    Queue import tasks round-robin across categories instead of one whole
+    category at a time, so a large backlog in one (e.g. audiobooks) can't
+    starve the other (e.g. ebooks) behind it in the FIFO task queue.
+    """
+    for group in zip_longest(*ids_by_category.values()):
+        for import_id in group:
+            if import_id is not None:
+                import_item.delay(import_id)
+
+
 @celery.task(name="app.tasks.scan_watch_dirs")
 def scan_watch_dirs():
     from app.app_settings import load as load_settings
@@ -34,6 +48,8 @@ def scan_watch_dirs():
         "audiobook": s.get("audiobook_watch_path", ""),
         "ebook": s.get("ebook_watch_path", ""),
     }
+
+    new_ids = {category: [] for category in watch_dirs}
 
     for category, watch_path in watch_dirs.items():
         if not watch_path:
@@ -76,9 +92,47 @@ def scan_watch_dirs():
                 status="pending",
             )
             db.session.add(record)
-            db.session.commit()
+            # flush (not commit) so we get the autoincremented id without
+            # opening/closing a separate write transaction per file — scans
+            # can find hundreds of files at once and per-row commits here
+            # were contending with worker processes writing status updates.
+            db.session.flush()
+            new_ids[category].append(record.id)
 
-            import_item.delay(record.id)
+    db.session.commit()
+    _dispatch_interleaved(new_ids)
+
+
+def _requeue_stalled_imports():
+    """
+    Re-dispatch any import stuck in 'pending' or 'importing' whose queued
+    task no longer exists (e.g. the broker restarted and lost its queue, or
+    a previous worker process died mid-task). Without this, such records
+    would sit stuck forever since scan_watch_dirs only enqueues files it
+    hasn't seen before.
+    """
+    records = (
+        Import.query.filter(Import.status.in_(("pending", "importing")))
+        .order_by(Import.id)
+        .all()
+    )
+    if not records:
+        return
+
+    ids_by_category = {}
+    for record in records:
+        ids_by_category.setdefault(record.category, []).append(record.id)
+
+    logger.info(f"Re-dispatching {len(records)} stalled import(s) on worker startup")
+    _dispatch_interleaved(ids_by_category)
+
+
+@worker_ready.connect
+def _on_worker_ready(**kwargs):
+    try:
+        _requeue_stalled_imports()
+    except Exception:
+        logger.exception("Failed to re-dispatch stalled imports on worker startup")
 
 
 @celery.task(name="app.tasks.import_item")
@@ -87,16 +141,18 @@ def import_item(import_id: int):
     if not record:
         return
 
-    record.status = "importing"
-    db.session.commit()
-
     try:
+        record.status = "importing"
+        db.session.commit()
         _run_import(record)
     except Exception as e:
         logger.exception(f"Import {import_id} failed: {e}")
-        record.status = "failed"
-        record.error_message = str(e)
-        db.session.commit()
+        db.session.rollback()
+        record = Import.query.get(import_id)
+        if record:
+            record.status = "failed"
+            record.error_message = str(e)
+            db.session.commit()
 
 
 def _run_import(record: Import):

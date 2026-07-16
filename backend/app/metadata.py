@@ -138,7 +138,12 @@ def _score(candidate: dict, parsed: dict) -> float:
     if not author:
         return title_s
 
-    author_s = fuzz.token_sort_ratio(
+    # token_set_ratio (not token_sort_ratio) so a parsed single author isn't
+    # penalized against a candidate's multi-credit author field (co-authors,
+    # translators, "Joe Hill - introduction"-style contributor credits) --
+    # token_sort_ratio scores "Stephen King" vs "Stephen King, Joe Hill -
+    # introduction" at only 52% despite it being a correct match.
+    author_s = fuzz.token_set_ratio(
         candidate.get("author", ""), author
     ) / 100
     return title_s * 0.65 + author_s * 0.35
@@ -307,16 +312,22 @@ def resolve_metadata(torrent_name: str, category: str, hint_author: str = "") ->
     if hint_author and not parsed["author"]:
         parsed["author"] = hint_author.strip()
 
+    threshold = current_app.config["CONFIDENCE_THRESHOLD"]
+
     scored = _search_and_score(parsed["author"], parsed["title"], category)
+    confident = bool(scored) and scored[0]["score"] >= threshold
 
     # When the filename had a clear Author - Title split, also try the reversed
     # interpretation (Title - Author) and take whichever direction scores higher.
     # This handles cases where the heuristic guessed wrong (e.g. equal word counts,
-    # or a short title that looks like a name).
-    if parsed["author"] and parsed["title"]:
+    # or a short title that looks like a name). Skipped once we already have a
+    # confident match -- these extra API calls (and their fallback cascades)
+    # add up across a large backlog and are wasted once we know the answer.
+    if not confident and parsed["author"] and parsed["title"]:
         flipped = _search_and_score(parsed["title"], parsed["author"], category)
         if flipped and (not scored or flipped[0]["score"] > scored[0]["score"]):
             scored = flipped
+        confident = bool(scored) and scored[0]["score"] >= threshold
 
     # Filenames often carry a subtitle after a colon or semicolon (e.g.
     # "Democracy Awakening; Notes on the State of America") that metadata
@@ -324,7 +335,7 @@ def resolve_metadata(torrent_name: str, category: str, hint_author: str = "") ->
     # an otherwise-correct match's score. Try scoring against just the main
     # title too and keep whichever interpretation scores higher.
     main_title = re.split(r"[:;]", parsed["title"], maxsplit=1)[0].strip()
-    if main_title and main_title != parsed["title"]:
+    if not confident and main_title and main_title != parsed["title"]:
         trimmed = _search_and_score(parsed["author"], main_title, category)
         if trimmed and (not scored or trimmed[0]["score"] > scored[0]["score"]):
             scored = trimmed
@@ -333,7 +344,6 @@ def resolve_metadata(torrent_name: str, category: str, hint_author: str = "") ->
         return {"confidence": 0.0, "match": None, "candidates": []}
 
     top = scored[0]
-    threshold = current_app.config["CONFIDENCE_THRESHOLD"]
 
     return {
         "confidence": top["score"],

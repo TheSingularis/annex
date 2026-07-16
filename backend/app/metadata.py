@@ -238,13 +238,17 @@ def _search_openlibrary(query: str) -> list:
     try:
         resp = requests.get(
             "https://openlibrary.org/search.json",
-            params={"q": query, "limit": 5},
+            # OpenLibrary's own relevance ranking buries the canonical edition
+            # of popular books under study guides, summaries, and translations
+            # (e.g. "The Alchemist" itself doesn't appear until position 9-11).
+            # Fetch a wider pool and let our own fuzzy scoring pick the best one.
+            params={"q": query, "limit": 20},
             timeout=10,
         )
         resp.raise_for_status()
         data = resp.json()
         results = []
-        for doc in data.get("docs", [])[:5]:
+        for doc in data.get("docs", [])[:20]:
             results.append({
                 "title": doc.get("title", ""),
                 "author": ", ".join(doc.get("author_name", [])),
@@ -263,13 +267,13 @@ def _search_googlebooks(query: str) -> list:
     try:
         resp = requests.get(
             "https://www.googleapis.com/books/v1/volumes",
-            params={"q": query, "maxResults": 5},
+            params={"q": query, "maxResults": 20},
             timeout=10,
         )
         resp.raise_for_status()
         data = resp.json()
         results = []
-        for item in data.get("items", [])[:5]:
+        for item in data.get("items", [])[:20]:
             info = item.get("volumeInfo", {})
             results.append({
                 "title": info.get("title", ""),
@@ -313,6 +317,17 @@ def resolve_metadata(torrent_name: str, category: str, hint_author: str = "") ->
         flipped = _search_and_score(parsed["title"], parsed["author"], category)
         if flipped and (not scored or flipped[0]["score"] > scored[0]["score"]):
             scored = flipped
+
+    # Filenames often carry a subtitle after a colon or semicolon (e.g.
+    # "Democracy Awakening; Notes on the State of America") that metadata
+    # APIs frequently omit from the main title. That mismatch alone can tank
+    # an otherwise-correct match's score. Try scoring against just the main
+    # title too and keep whichever interpretation scores higher.
+    main_title = re.split(r"[:;]", parsed["title"], maxsplit=1)[0].strip()
+    if main_title and main_title != parsed["title"]:
+        trimmed = _search_and_score(parsed["author"], main_title, category)
+        if trimmed and (not scored or trimmed[0]["score"] > scored[0]["score"]):
+            scored = trimmed
 
     if not scored:
         return {"confidence": 0.0, "match": None, "candidates": []}

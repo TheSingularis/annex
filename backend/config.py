@@ -27,5 +27,7 @@ class Config:
     CONFIDENCE_THRESHOLD = float(os.environ.get("CONFIDENCE_THRESHOLD", 0.85))
     POLL_INTERVAL_SECONDS = int(os.environ.get("POLL_INTERVAL_SECONDS", 60))
 
+    GIT_SHA = os.environ.get("GIT_SHA", "dev")
+
     AUDIOBOOK_EXTENSIONS = {".m4b", ".mp3", ".flac", ".ogg", ".opus", ".aac"}
     EBOOK_EXTENSIONS = {".epub", ".mobi", ".pdf", ".azw3"}

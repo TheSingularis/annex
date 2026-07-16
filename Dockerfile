@@ -9,6 +9,9 @@ RUN npm run build
 # Stage 2: runtime
 FROM python:3.12-slim
 
+ARG GIT_SHA=unknown
+ENV GIT_SHA=${GIT_SHA}
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     redis-server \
     supervisor \

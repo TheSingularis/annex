@@ -5,6 +5,7 @@ import { useTheme } from "../lib/ThemeContext";
 interface EnvConfig {
   confidence_threshold: number;
   poll_interval_seconds: number;
+  version: string;
 }
 
 function StatusDot({ status, loading }: { status: AbsStatus | null; loading: boolean }) {
@@ -224,6 +225,12 @@ export default function Settings() {
           </div>
           {clearMsg && <div style={{ marginTop: 10, fontSize: 13, color: "#198754" }}>{clearMsg}</div>}
         </div>
+
+        {envConfig && (
+          <div style={{ textAlign: "center", fontSize: 12, color: tokens.textMuted, padding: "4px 0" }}>
+            Annex <span style={{ fontFamily: "monospace" }}>{envConfig.version}</span>
+          </div>
+        )}
 
       </div>
     </div>

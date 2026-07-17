@@ -7,7 +7,8 @@ Annex watches directories of unorganized ebooks and audiobooks and automatically
 ## Features
 
 - Watches configurable directories for new audiobook and ebook files
-- Resolves metadata via [Audnexus](https://github.com/laxamentumtech/audnexus) (audiobooks) and OpenLibrary / Google Books (ebooks)
+- Ebook matching covers novels/epubs (`.epub`, `.mobi`, `.pdf`, `.azw3`) as well as comics and manga (`.cbz`, `.cbr`, `.cb7`, `.cbt`)
+- Resolves metadata via [Audnexus](https://github.com/laxamentumtech/audnexus) (audiobooks), OpenLibrary / Google Books (ebooks), and AniList / ComicVine (manga/comics)
 - Organizes files into `Author/Title/` structure via hardlinks — originals untouched
 - Queues low-confidence matches for manual review via the UI
 - Manual import for individual files or folders
@@ -44,6 +45,7 @@ Tuneable but work out of the box.
 |---|---|---|
 | `CONFIDENCE_THRESHOLD` | Metadata match score (0–1). Below this, item is queued for manual review | `0.85` |
 | `POLL_INTERVAL_SECONDS` | How often to scan watch directories | `60` |
+| `COMICVINE_API_KEY` | Optional. Enables ComicVine as a metadata source for western comics. Get a free key at [comicvine.gamespot.com/api](https://comicvine.gamespot.com/api/). Manga matching (AniList) needs no key. | unset |
 
 ### Optional — Audiobookshelf integration
 
@@ -86,6 +88,14 @@ celery -A celery_worker.celery worker --beat --loglevel=info
 # Frontend (separate terminal)
 cd frontend
 npm install && npm run dev
+```
+
+### Tests
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+pytest
 ```
 
 Frontend: `http://localhost:5173` — proxies `/api` to Flask on port `5000`.

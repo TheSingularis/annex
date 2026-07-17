@@ -11,7 +11,7 @@ from app import celery, db
 from app.models import Import
 from app.abs import ABSClient
 from app.metadata import resolve_metadata
-from app.fileops import discover_files, build_target_dir, hardlink_files
+from app.fileops import discover_files, build_target_dir, hardlink_files, is_comic
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +170,9 @@ def _run_import(record: Import):
         except Exception as e:
             logger.debug(f"Could not read file metadata: {e}")
 
-    result = resolve_metadata(record.name, record.category, hint_author=hint_author)
+    result = resolve_metadata(
+        record.name, record.category, hint_author=hint_author, is_comic=is_comic(files)
+    )
     record.metadata_confidence = result["confidence"]
     record.candidates_json = json.dumps([
         {k: v for k, v in c.items() if k != "raw"}

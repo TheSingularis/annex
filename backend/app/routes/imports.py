@@ -5,7 +5,7 @@ from app import db
 from app.models import Import
 from app.tasks import import_item, _finalize_import
 from app.metadata import resolve_metadata
-from app.fileops import discover_files
+from app.fileops import discover_files, is_comic
 
 imports_bp = Blueprint("imports", __name__)
 
@@ -66,7 +66,7 @@ def manual_import():
             return jsonify({"error": record.error_message}), 400
 
         # Still query APIs to pick up series data
-        meta = resolve_metadata(f"{author} {title}", category)
+        meta = resolve_metadata(f"{author} {title}", category, is_comic=is_comic(files))
         top = meta["candidates"][0] if meta["candidates"] else {}
         match = {
             "author": author,
@@ -125,7 +125,7 @@ def approve_import(import_id):
 
     # If series wasn't explicitly set, query APIs to fill it in
     if not series and not series_seq:
-        meta = resolve_metadata(f"{author} {title}", record.category)
+        meta = resolve_metadata(f"{author} {title}", record.category, is_comic=is_comic(files))
         top = meta["candidates"][0] if meta["candidates"] else {}
         series = top.get("series", "")
         series_seq = top.get("series_seq", "")

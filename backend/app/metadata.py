@@ -11,7 +11,7 @@ _BRACKET_RE = re.compile(r"[\[\(][^\]\)]*[\]\)]")
 _PUNCT_RE = re.compile(r"[_\-\.]+")
 _JUNK_RE = re.compile(
     r"\b(audiobook|ebook|epub|mobi|pdf|m4b|mp3|flac|aac|retail|true|unabridged"
-    r"|repack|proper|\d{4})\b",
+    r"|repack|proper|cbz|cbr|cb7|cbt|digital|scan|\d{4})\b",
     re.IGNORECASE,
 )
 # Leading track numbers: "01 Title", "1 Title", "003 Title"
@@ -27,6 +27,11 @@ _EDITION_RE = re.compile(
     r"\s*\([^)]*\b(?:unabridged|abridged|ungek[uü]rzt)\b[^)]*\)\s*$",
     re.IGNORECASE,
 )
+
+# Comic/manga volume, chapter, or issue markers: "Vol. 3", "v03", "Chapter 12", "#7"
+_VOLUME_RE = re.compile(r"\bv(?:ol(?:ume)?)?\.?\s*0*(\d+(?:\.\d+)?)\b", re.IGNORECASE)
+_CHAPTER_RE = re.compile(r"\bch(?:apter)?\.?\s*0*(\d+(?:\.\d+)?)\b", re.IGNORECASE)
+_ISSUE_RE = re.compile(r"#\s*0*(\d+(?:\.\d+)?)\b")
 
 
 def _clean(s: str) -> str:
@@ -78,6 +83,30 @@ def parse_torrent_name(name: str) -> dict:
             return {"author": right, "title": left}
 
     return {"author": "", "title": _clean_title(cleaned)}
+
+
+def parse_comic_name(name: str) -> dict:
+    """
+    Best-effort extraction of series name and volume/chapter/issue number
+    from a comic or manga filename (e.g. "One Piece v03 (Digital)", "Batman
+    - Hush #001", "Attack on Titan Vol. 5 [Kodansha]").
+
+    Comics/manga are organized by series rather than a unique book title, and
+    releases rarely carry an author in the filename, so unlike
+    parse_torrent_name this doesn't attempt an author/title split.
+    """
+    name = _LEADING_TRACK_RE.sub("", name).strip()
+    cleaned = _BRACKET_RE.sub(" ", name)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+
+    seq = ""
+    matches = [m for m in (_VOLUME_RE.search(cleaned), _CHAPTER_RE.search(cleaned), _ISSUE_RE.search(cleaned)) if m]
+    if matches:
+        earliest = min(matches, key=lambda m: m.start())
+        seq = earliest.group(1)
+        cleaned = cleaned[:earliest.start()]
+
+    return {"author": "", "title": _clean_title(cleaned), "series_seq": seq}
 
 
 def _assign_author_title(left: str, right: str) -> dict:
@@ -151,7 +180,7 @@ def _score(candidate: dict, parsed: dict) -> float:
 
 # --- Search + score helpers ---
 
-def _search_and_score(author: str, title: str, category: str) -> list:
+def _search_and_score(author: str, title: str, category: str, is_comic: bool = False) -> list:
     """Run the appropriate API search and return scored candidates, best first."""
     query = f"{author} {title}".strip()
     parsed = {"author": author, "title": title}
@@ -160,6 +189,12 @@ def _search_and_score(author: str, title: str, category: str) -> list:
         candidates = _search_audible(query)
         if not candidates:
             candidates = _search_itunes(query)
+        if not candidates:
+            candidates = _search_googlebooks(query)
+    elif is_comic:
+        candidates = _search_comicvine(query)
+        if not candidates:
+            candidates = _search_anilist(query)
         if not candidates:
             candidates = _search_googlebooks(query)
     else:
@@ -268,6 +303,87 @@ def _search_openlibrary(query: str) -> list:
         return []
 
 
+def _search_comicvine(query: str) -> list:
+    """Search ComicVine for western comic volumes/series. Skipped if no API key configured."""
+    api_key = current_app.config.get("COMICVINE_API_KEY")
+    if not api_key:
+        return []
+    try:
+        resp = requests.get(
+            "https://comicvine.gamespot.com/api/search/",
+            params={
+                "api_key": api_key,
+                "format": "json",
+                "query": query,
+                "resources": "volume",
+                "limit": 10,
+            },
+            headers={"User-Agent": "annex"},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        results = []
+        for item in data.get("results", [])[:10]:
+            series_title = item.get("name", "")
+            publisher = (item.get("publisher") or {}).get("name", "")
+            results.append({
+                "title": series_title,
+                "author": publisher,
+                "series": series_title,
+                "series_seq": "",
+                "source": "comicvine",
+                "raw": item,
+            })
+        return results
+    except Exception as e:
+        current_app.logger.warning(f"ComicVine search failed: {e}")
+        return []
+
+
+def _search_anilist(query: str) -> list:
+    """Search AniList for manga series. No API key required."""
+    graphql_query = """
+    query ($search: String) {
+        Page(perPage: 10) {
+            media(search: $search, type: MANGA) {
+                title { romaji english }
+                staff(perPage: 3) { nodes { name { full } } }
+            }
+        }
+    }
+    """
+    try:
+        resp = requests.post(
+            "https://graphql.anilist.co",
+            json={"query": graphql_query, "variables": {"search": query}},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        media = data.get("data", {}).get("Page", {}).get("media", []) or []
+        results = []
+        for item in media[:10]:
+            title_obj = item.get("title") or {}
+            series_title = title_obj.get("english") or title_obj.get("romaji", "")
+            staff_nodes = (item.get("staff") or {}).get("nodes", [])
+            author = ", ".join(
+                n["name"]["full"] for n in staff_nodes if n.get("name", {}).get("full")
+            )
+            results.append({
+                "title": series_title,
+                "author": author,
+                "series": series_title,
+                "series_seq": "",
+                "source": "anilist",
+                "raw": item,
+            })
+        return results
+    except Exception as e:
+        current_app.logger.warning(f"AniList manga search failed: {e}")
+        return []
+
+
 def _search_googlebooks(query: str) -> list:
     try:
         resp = requests.get(
@@ -294,7 +410,9 @@ def _search_googlebooks(query: str) -> list:
         return []
 
 
-def resolve_metadata(torrent_name: str, category: str, hint_author: str = "") -> dict:
+def resolve_metadata(
+    torrent_name: str, category: str, hint_author: str = "", is_comic: bool = False
+) -> dict:
     """
     Returns:
         {
@@ -305,8 +423,11 @@ def resolve_metadata(torrent_name: str, category: str, hint_author: str = "") ->
 
     hint_author: author string read from file tags — used when none can be
                  parsed from the filename itself.
+    is_comic: True for comic/manga archive formats. Uses series/volume-aware
+              filename parsing and searches ComicVine/AniList instead of
+              OpenLibrary/Google Books.
     """
-    parsed = parse_torrent_name(torrent_name)
+    parsed = parse_comic_name(torrent_name) if is_comic else parse_torrent_name(torrent_name)
 
     # Use file-tag author only when the filename gave us nothing
     if hint_author and not parsed["author"]:
@@ -314,34 +435,46 @@ def resolve_metadata(torrent_name: str, category: str, hint_author: str = "") ->
 
     threshold = current_app.config["CONFIDENCE_THRESHOLD"]
 
-    scored = _search_and_score(parsed["author"], parsed["title"], category)
+    scored = _search_and_score(parsed["author"], parsed["title"], category, is_comic=is_comic)
     confident = bool(scored) and scored[0]["score"] >= threshold
 
-    # When the filename had a clear Author - Title split, also try the reversed
-    # interpretation (Title - Author) and take whichever direction scores higher.
-    # This handles cases where the heuristic guessed wrong (e.g. equal word counts,
-    # or a short title that looks like a name). Skipped once we already have a
-    # confident match -- these extra API calls (and their fallback cascades)
-    # add up across a large backlog and are wasted once we know the answer.
-    if not confident and parsed["author"] and parsed["title"]:
-        flipped = _search_and_score(parsed["title"], parsed["author"], category)
-        if flipped and (not scored or flipped[0]["score"] > scored[0]["score"]):
-            scored = flipped
-        confident = bool(scored) and scored[0]["score"] >= threshold
+    # The author/title-flip and subtitle-trim retries below assume prose
+    # novel filenames (an "Author - Title" split, a colon-separated subtitle).
+    # Comics/manga are parsed as a bare series name with no author, so neither
+    # heuristic applies.
+    if not is_comic:
+        # When the filename had a clear Author - Title split, also try the reversed
+        # interpretation (Title - Author) and take whichever direction scores higher.
+        # This handles cases where the heuristic guessed wrong (e.g. equal word counts,
+        # or a short title that looks like a name). Skipped once we already have a
+        # confident match -- these extra API calls (and their fallback cascades)
+        # add up across a large backlog and are wasted once we know the answer.
+        if not confident and parsed["author"] and parsed["title"]:
+            flipped = _search_and_score(parsed["title"], parsed["author"], category)
+            if flipped and (not scored or flipped[0]["score"] > scored[0]["score"]):
+                scored = flipped
+            confident = bool(scored) and scored[0]["score"] >= threshold
 
-    # Filenames often carry a subtitle after a colon or semicolon (e.g.
-    # "Democracy Awakening; Notes on the State of America") that metadata
-    # APIs frequently omit from the main title. That mismatch alone can tank
-    # an otherwise-correct match's score. Try scoring against just the main
-    # title too and keep whichever interpretation scores higher.
-    main_title = re.split(r"[:;]", parsed["title"], maxsplit=1)[0].strip()
-    if not confident and main_title and main_title != parsed["title"]:
-        trimmed = _search_and_score(parsed["author"], main_title, category)
-        if trimmed and (not scored or trimmed[0]["score"] > scored[0]["score"]):
-            scored = trimmed
+        # Filenames often carry a subtitle after a colon or semicolon (e.g.
+        # "Democracy Awakening; Notes on the State of America") that metadata
+        # APIs frequently omit from the main title. That mismatch alone can tank
+        # an otherwise-correct match's score. Try scoring against just the main
+        # title too and keep whichever interpretation scores higher.
+        main_title = re.split(r"[:;]", parsed["title"], maxsplit=1)[0].strip()
+        if not confident and main_title and main_title != parsed["title"]:
+            trimmed = _search_and_score(parsed["author"], main_title, category)
+            if trimmed and (not scored or trimmed[0]["score"] > scored[0]["score"]):
+                scored = trimmed
 
     if not scored:
         return {"confidence": 0.0, "match": None, "candidates": []}
+
+    # ComicVine/AniList return the series name but not a volume/chapter/issue
+    # number -- that only lives in the filename, so carry it over here.
+    if is_comic and parsed.get("series_seq"):
+        for c in scored:
+            c["series"] = c.get("series") or c.get("title", "")
+            c["series_seq"] = parsed["series_seq"]
 
     top = scored[0]
 

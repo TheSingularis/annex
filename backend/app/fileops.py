@@ -50,6 +50,12 @@ def discover_files(content_path: str, category: str) -> list[Path]:
     )
 
 
+def is_comic(files: list[Path]) -> bool:
+    """True if any discovered file is a comic/manga archive format."""
+    extensions = current_app.config["COMIC_EXTENSIONS"]
+    return any(f.suffix.lower() in extensions for f in files)
+
+
 def hardlink_files(source_files: list[Path], target_dir: Path, title: str) -> list[Path]:
     """
     Links source_files into target_dir via hardlink, falling back to copy

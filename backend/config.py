@@ -29,5 +29,12 @@ class Config:
 
     GIT_SHA = os.environ.get("GIT_SHA", "dev")
 
+    # Optional — enables ComicVine as a metadata source for western comics.
+    # Manga matching (AniList) needs no key and is always active.
+    COMICVINE_API_KEY = os.environ.get("COMICVINE_API_KEY", "")
+
     AUDIOBOOK_EXTENSIONS = {".m4b", ".mp3", ".flac", ".ogg", ".opus", ".aac"}
-    EBOOK_EXTENSIONS = {".epub", ".mobi", ".pdf", ".azw3"}
+    # Comic/manga archive formats — matched via ComicVine/AniList instead of
+    # OpenLibrary/Google Books (see metadata.py).
+    COMIC_EXTENSIONS = {".cbz", ".cbr", ".cb7", ".cbt"}
+    EBOOK_EXTENSIONS = {".epub", ".mobi", ".pdf", ".azw3"} | COMIC_EXTENSIONS

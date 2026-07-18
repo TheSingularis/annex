@@ -8,7 +8,7 @@ from flask import current_app
 # --- Filename cleaning patterns ---
 
 _BRACKET_RE = re.compile(r"[\[\(][^\]\)]*[\]\)]")
-_PUNCT_RE = re.compile(r"[_\-\.]+")
+_PUNCT_RE = re.compile(r"[,_\-\.]+")
 _JUNK_RE = re.compile(
     r"\b(audiobook|ebook|epub|mobi|pdf|m4b|mp3|flac|aac|retail|true|unabridged"
     r"|repack|proper|cbz|cbr|cb7|cbt|digital|scan|\d{4})\b",
@@ -61,6 +61,10 @@ def parse_torrent_name(name: str) -> dict:
 
     # Remove bracketed content (series info, format tags, etc.)
     cleaned = _BRACKET_RE.sub(" ", name)
+    # Underscores are a common word-separator convention in release names
+    # ("Author_-_Title.epub"); normalize to spaces before the " - " split
+    # check below, otherwise that whole naming convention never matches it.
+    cleaned = cleaned.replace("_", " ")
     # Normalize double-dash separator to single
     cleaned = re.sub(r"\s*--+\s*", " - ", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
@@ -465,6 +469,24 @@ def resolve_metadata(
             trimmed = _search_and_score(parsed["author"], main_title, category)
             if trimmed and (not scored or trimmed[0]["score"] > scored[0]["score"]):
                 scored = trimmed
+            confident = bool(scored) and scored[0]["score"] >= threshold
+
+        # A clean "A - B" split doesn't always mean B is an author -- e.g.
+        # translated works are often named "English Title - Native Title"
+        # with no author anywhere in the filename. Re-score the same
+        # candidates (no new API call -- same query text either way) as a
+        # single title-only string and keep whichever interpretation scores
+        # higher, so a wrong author guess can't tank an otherwise-correct
+        # title match.
+        if not confident and parsed["author"] and scored:
+            whole_title = f"{parsed['author']} {parsed['title']}".strip()
+            as_whole = sorted(
+                [{**c, "score": _score(c, {"author": "", "title": whole_title})} for c in scored],
+                key=lambda x: x["score"],
+                reverse=True,
+            )
+            if as_whole and as_whole[0]["score"] > scored[0]["score"]:
+                scored = as_whole
 
     if not scored:
         return {"confidence": 0.0, "match": None, "candidates": []}

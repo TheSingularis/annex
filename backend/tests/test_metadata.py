@@ -10,11 +10,21 @@ from app import metadata
     ("Dune - Frank Herbert", {"author": "Frank Herbert", "title": "Dune"}),
     ("Project Hail Mary by Andy Weir", {"author": "Andy Weir", "title": "Project Hail Mary"}),
     ("01 For We Are Many", {"author": "", "title": "For We Are Many"}),
+    # "Author_-_Title" is a common release-name convention -- the dash is
+    # flanked by underscores rather than real spaces.
+    ("Operation_Bounce_House_-_Matt_Dinniman.epub", {"author": "Matt Dinniman", "title": "Operation Bounce House"}),
 ])
 def test_parse_torrent_name(name, expected):
     result = metadata.parse_torrent_name(name)
     assert result["author"] == expected["author"]
     assert result["title"] == expected["title"]
+
+
+def test_parse_torrent_name_strips_commas():
+    # Commas are pure punctuation noise for search purposes, but were
+    # previously left in place, which can zero out strict search APIs.
+    result = metadata.parse_torrent_name("Hoax_ Donald Trump, Fox News - Brian Stelter.epub")
+    assert "," not in result["title"]
 
 
 def test_parse_torrent_name_strips_bracketed_junk():
@@ -168,6 +178,21 @@ def test_comic_low_confidence_only_searches_once(app, monkeypatch):
 
     assert result["match"] is None
     assert len(calls) == 1
+
+
+def test_prose_low_confidence_retries_whole_title_when_split_guess_is_wrong(app, http_mock):
+    # "English Title - Native Title" (e.g. translated works) has no author
+    # anywhere in the filename, but the "A - B" split heuristic still
+    # guesses one side is an author. The wrong author guess must not tank
+    # an otherwise-correct title-only match.
+    http_mock.on_get("openlibrary.org", {
+        "docs": [{"title": "Heaven Official's Blessing -- Tian Guan Ci Fu Vol. 2", "author_name": ["Mo Xiang Tong Xiu"]}]
+    })
+
+    result = metadata.resolve_metadata("Heaven Officials Blessing - Tian Guan Ci Fu Vol.2", "ebook")
+
+    assert result["match"] is not None
+    assert result["match"]["author"] == "Mo Xiang Tong Xiu"
 
 
 def test_prose_low_confidence_retries_flip_and_subtitle_trim(app, monkeypatch):

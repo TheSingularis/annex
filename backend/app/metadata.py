@@ -28,6 +28,32 @@ _EDITION_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Release groups sometimes swap ':' for a lookalike character to dodge
+# filesystem restrictions (e.g. "Heir of Fire꞉ Throne of Glass, Book 3").
+# Normalize those back to a real colon so downstream colon-based logic
+# (subtitle splitting, the book-marker pattern below) still sees them.
+_COLON_SUBSTITUTES = "꞉："
+
+# A bracketed aside naming the series and book number, e.g.
+# "(The Three-Body Problem, Book 3)" or "(Throne of Glass Book 3)".
+_BOOK_MARKER_RE = re.compile(
+    r"^(?P<series>.+?),?\s+book\s+(?P<seq>\d+(?:\.\d+)?)$", re.IGNORECASE
+)
+# A whole dash-delimited segment that's just "<series name> <number>", e.g.
+# "Zodiac Academy 07" in "Author - Zodiac Academy 07 - Title" -- the
+# release-name convention for a series entry.
+_SEGMENT_SERIES_RE = re.compile(r"^(?P<series>.+?)\s+(?P<seq>\d{1,3}(?:\.\d+)?)$")
+
+# Common Audible-style naming with no dash at all: "Title: Series, Book N"
+# (e.g. "Heir of Fire: Throne of Glass, Book 3"). No author in this
+# convention -- it comes from file tags instead, via resolve_metadata's
+# hint_author.
+_COLON_SERIES_RE = re.compile(
+    r"^(?P<title>.+?):\s*(?P<series>.+?),?\s+book\s+(?P<seq>\d+(?:\.\d+)?)"
+    r"(?:\.[A-Za-z0-9]{2,4})?\s*$",
+    re.IGNORECASE,
+)
+
 # Comic/manga volume, chapter, or issue markers: "Vol. 3", "v03", "Chapter 12", "#7"
 _VOLUME_RE = re.compile(r"\bv(?:ol(?:ume)?)?\.?\s*0*(\d+(?:\.\d+)?)\b", re.IGNORECASE)
 _CHAPTER_RE = re.compile(r"\bch(?:apter)?\.?\s*0*(\d+(?:\.\d+)?)\b", re.IGNORECASE)
@@ -54,10 +80,33 @@ def _normalize_candidate_title(title: str) -> str:
 
 
 def parse_torrent_name(name: str) -> dict:
-    """Best-effort extraction of author and title from a filename or folder name."""
+    """Best-effort extraction of author, title, and series/number from a filename or folder name."""
     # Strip leading track number: "01 For We Are Many" -> "For We Are Many"
     # Only strip 1-3 digits followed by whitespace so we don't touch "1984" etc.
     name = _LEADING_TRACK_RE.sub("", name).strip()
+    for ch in _COLON_SUBSTITUTES:
+        name = name.replace(ch, ":")
+
+    colon_match = _COLON_SERIES_RE.match(name)
+    if colon_match:
+        return {
+            "author": "",
+            "title": _clean_title(colon_match.group("title")),
+            "series": _clean(colon_match.group("series")),
+            "series_seq": colon_match.group("seq"),
+        }
+
+    series, series_seq = "", ""
+
+    # Series/book info embedded in a bracketed aside, e.g. "Death's End (The
+    # Three-Body Problem, Book 3)" -- must be captured before _BRACKET_RE
+    # below discards the bracket contents entirely.
+    for bracket in _BRACKET_RE.finditer(name):
+        inner = bracket.group(0)[1:-1].strip()
+        m = _BOOK_MARKER_RE.match(inner)
+        if m:
+            series, series_seq = m.group("series").strip(), m.group("seq")
+            break
 
     # Remove bracketed content (series info, format tags, etc.)
     cleaned = _BRACKET_RE.sub(" ", name)
@@ -71,10 +120,42 @@ def parse_torrent_name(name: str) -> dict:
 
     # Split on " - " BEFORE _PUNCT_RE eats the dash
     if " - " in cleaned:
-        parts = [p.strip() for p in cleaned.split(" - ", 1)]
-        left = _clean_title(parts[0])
-        right = _clean_title(parts[1])
-        return _assign_author_title(left, right)
+        segments = [s.strip() for s in cleaned.split(" - ")]
+
+        # Release convention: "Author - Series NN - Title". A middle segment
+        # matching "<name> <N>" names a series entry rather than being part
+        # of the author/title. Requires 3+ segments (a real author segment
+        # present) -- with only 2 segments this is too ambiguous to guess
+        # (e.g. "Fahrenheit 451 - A Novel" is a title with a number in it,
+        # not series "Fahrenheit" book 451).
+        if not series and len(segments) >= 3:
+            for i in range(1, len(segments) - 1):
+                m = _SEGMENT_SERIES_RE.match(segments[i])
+                if m:
+                    series, series_seq = m.group("series").strip(), m.group("seq")
+                    del segments[i]
+                    break
+
+        if series:
+            # The series segment carried the ambiguity; whatever's left
+            # keeps its original author-first/title-last order, so no need
+            # to re-run the word-count heuristic below on the remainder.
+            if len(segments) >= 2:
+                result = {
+                    "author": _clean_title(segments[0]),
+                    "title": _clean_title(" - ".join(segments[1:])),
+                }
+            else:
+                result = {"author": "", "title": _clean_title(segments[0])}
+        else:
+            parts = cleaned.split(" - ", 1)
+            left = _clean_title(parts[0])
+            right = _clean_title(parts[1])
+            result = _assign_author_title(left, right)
+
+        result["series"] = series
+        result["series_seq"] = series_seq
+        return result
 
     # Check for "Title by Author" pattern (e.g. "The Burning God by R. F. Kuang")
     by_match = re.search(r"\s+by\s+", cleaned, re.IGNORECASE)
@@ -84,9 +165,9 @@ def parse_torrent_name(name: str) -> dict:
         # Only treat "by" as separator when left is a plausible title (2+ words)
         # and right is a plausible author name (1-4 words)
         if len(left.split()) >= 2 and 1 <= len(right.split()) <= 4:
-            return {"author": right, "title": left}
+            return {"author": right, "title": left, "series": series, "series_seq": series_seq}
 
-    return {"author": "", "title": _clean_title(cleaned)}
+    return {"author": "", "title": _clean_title(cleaned), "series": series, "series_seq": series_seq}
 
 
 def parse_comic_name(name: str) -> dict:
@@ -497,6 +578,14 @@ def resolve_metadata(
         for c in scored:
             c["series"] = c.get("series") or c.get("title", "")
             c["series_seq"] = parsed["series_seq"]
+
+    # Prose/audiobook APIs (OpenLibrary, Google Books) don't return series
+    # data at all, and Audible only sometimes does -- fall back to whatever
+    # the filename itself told us (e.g. "Zodiac Academy 07 - Heartless Sky").
+    if not is_comic and (parsed.get("series") or parsed.get("series_seq")):
+        for c in scored:
+            c["series"] = c.get("series") or parsed.get("series", "")
+            c["series_seq"] = c.get("series_seq") or parsed.get("series_seq", "")
 
     top = scored[0]
 

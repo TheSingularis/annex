@@ -35,6 +35,69 @@ def test_parse_torrent_name_strips_bracketed_junk():
     assert result["title"] == "The Burning God"
 
 
+# --- series/number detection (prose) ---
+
+@pytest.mark.parametrize("name,expected", [
+    # "Author - Series NN - Title" release convention
+    (
+        "Laurie Gilmore - The Dream Harbor 02 - The Cinnamon Bun Book Store.epub",
+        {"author": "Laurie Gilmore", "title": "The Cinnamon Bun Book Store",
+         "series": "The Dream Harbor", "series_seq": "02"},
+    ),
+    (
+        "Caroline Peckham, Susanne Valenti - Zodiac Academy 07 - Heartless Sky",
+        {"author": "Caroline Peckham Susanne Valenti", "title": "Heartless Sky",
+         "series": "Zodiac Academy", "series_seq": "07"},
+    ),
+    # "Title (Series, Book N)" bracketed aside
+    (
+        "Cixin Liu - Death's End (The Three-Body Problem, Book 3)",
+        {"author": "Cixin Liu", "title": "Death's End",
+         "series": "The Three-Body Problem", "series_seq": "3"},
+    ),
+    # "Title: Series, Book N" with no author (comes from file tags instead)
+    (
+        "Heir of Fire: Throne of Glass, Book 3.m4b",
+        {"author": "", "title": "Heir of Fire",
+         "series": "Throne of Glass", "series_seq": "3"},
+    ),
+])
+def test_parse_torrent_name_series(name, expected):
+    result = metadata.parse_torrent_name(name)
+    assert result["author"] == expected["author"]
+    assert result["title"] == expected["title"]
+    assert result["series"] == expected["series"]
+    assert result["series_seq"] == expected["series_seq"]
+
+
+def test_parse_torrent_name_series_normalizes_fake_colon():
+    # Release groups sometimes swap ':' for a lookalike unicode character to
+    # dodge filesystem restrictions on real colons.
+    result = metadata.parse_torrent_name("Heir of Fire꞉ Throne of Glass, Book 3.m4b")
+    assert result["title"] == "Heir of Fire"
+    assert result["series"] == "Throne of Glass"
+
+
+@pytest.mark.parametrize("name", [
+    # A title with a number in it must not be misread as "series N" --
+    # only a 3+ segment split (a real author segment present) is safe to
+    # treat that way. Two segments is too ambiguous either direction.
+    "Fahrenheit 451 - A Novel",
+    "Room 101 - Orwell",
+])
+def test_parse_torrent_name_no_false_positive_series(name):
+    result = metadata.parse_torrent_name(name)
+    assert result["series"] == ""
+    assert result["series_seq"] == ""
+
+
+def test_parse_torrent_name_no_false_positive_series_title():
+    # "Fahrenheit 451" itself must survive intact, not get read as
+    # series "Fahrenheit" book 451.
+    result = metadata.parse_torrent_name("Fahrenheit 451 - A Novel")
+    assert result["title"] == "Fahrenheit 451"
+
+
 # --- parse_comic_name (comics/manga) ---
 
 @pytest.mark.parametrize("name,expected_title,expected_seq", [
@@ -193,6 +256,23 @@ def test_prose_low_confidence_retries_whole_title_when_split_guess_is_wrong(app,
 
     assert result["match"] is not None
     assert result["match"]["author"] == "Mo Xiang Tong Xiu"
+
+
+def test_resolve_metadata_fills_series_from_filename(app, http_mock):
+    # OpenLibrary/Google Books don't return series data at all -- when the
+    # filename itself named a series/number ("Zodiac Academy 07"), that
+    # should end up on the final match rather than being lost.
+    http_mock.on_get("openlibrary.org", {
+        "docs": [{"title": "Heartless Sky", "author_name": ["Caroline Peckham", "Susanne Valenti"]}]
+    })
+
+    result = metadata.resolve_metadata(
+        "Caroline Peckham, Susanne Valenti - Zodiac Academy 07 - Heartless Sky", "ebook"
+    )
+
+    assert result["match"] is not None
+    assert result["match"]["series"] == "Zodiac Academy"
+    assert result["match"]["series_seq"] == "07"
 
 
 def test_prose_low_confidence_retries_flip_and_subtitle_trim(app, monkeypatch):

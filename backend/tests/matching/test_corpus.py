@@ -13,8 +13,18 @@ from pathlib import Path
 import pytest
 
 from app import metadata
+from app.matching import extraction
 
 FIXTURE_PATH = Path(__file__).parent.parent / "fixtures" / "corpus.json"
+
+# Measured against this branch's app.metadata (which already includes the
+# two series-detection bugfixes from fix/series-detection-followups) via
+# test_current_extraction_baseline_accuracy below: 29/213 and 14/213 scored
+# corpus entries respectively. Exact fractions, not rounded decimals, so a
+# byte-for-byte-identical port doesn't spuriously fail this gate. The new
+# app.matching.extraction module (Phase 1) must meet or beat both.
+BASELINE_TITLE_AUTHOR_RATE = 29 / 213
+BASELINE_ALL_FIELDS_RATE = 14 / 213
 
 
 def _load_corpus():
@@ -94,3 +104,48 @@ def test_current_extraction_baseline_accuracy():
     # this drops much further, something upstream broke; it isn't a bar
     # Phase 1 needs to clear on parsing alone.
     assert title_author_rate > 0.10
+
+
+def _extract_new(entry):
+    return extraction.extract(entry["name"], is_comic=entry["is_comic"])
+
+
+def test_new_extraction_meets_or_beats_baseline():
+    """
+    Phase 1 gate: app.matching.extraction (the refactored, independently-
+    testable extraction module) must match or beat the old app.metadata
+    extraction's accuracy against the same corpus. Doesn't need to be
+    perfect -- most corpus misses are search/scoring problems (Phase 2/3),
+    not filename-parsing problems -- but it must not regress.
+    """
+    _, entries = _load_corpus()
+    scored = [e for e in entries if e["expected"] is not None]
+
+    exact_title_author = 0
+    exact_all_fields = 0
+    for e in scored:
+        got = _extract_new(e)
+        expected = e["expected"]
+        title_author_match = (
+            got.title == expected["title"] and got.author == expected["author"]
+        )
+        if title_author_match:
+            exact_title_author += 1
+        if title_author_match and (
+            got.series == expected["series"] and got.series_seq == expected["series_seq"]
+        ):
+            exact_all_fields += 1
+
+    title_author_rate = exact_title_author / len(scored)
+    all_fields_rate = exact_all_fields / len(scored)
+
+    print(
+        f"\napp.matching.extraction against {len(scored)} scored corpus entries:\n"
+        f"  title+author exact match: {exact_title_author}/{len(scored)} "
+        f"({title_author_rate:.1%}) -- baseline {BASELINE_TITLE_AUTHOR_RATE:.1%}\n"
+        f"  title+author+series+seq exact match: {exact_all_fields}/{len(scored)} "
+        f"({all_fields_rate:.1%}) -- baseline {BASELINE_ALL_FIELDS_RATE:.1%}"
+    )
+
+    assert title_author_rate >= BASELINE_TITLE_AUTHOR_RATE
+    assert all_fields_rate >= BASELINE_ALL_FIELDS_RATE

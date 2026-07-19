@@ -168,6 +168,50 @@ def test_score_does_not_penalize_extra_author_credits():
     assert metadata._score(candidate, parsed) >= 0.85
 
 
+# --- ISBN surfaced from already-fetched provider responses (Phase 1.5) ---
+
+def test_search_openlibrary_extracts_isbn(app, http_mock):
+    http_mock.on_get("openlibrary.org", {
+        "docs": [{"title": "The Alchemist", "author_name": ["Paulo Coelho"],
+                   "isbn": ["0061122416", "9780061122415"]}]
+    })
+    results = metadata._search_openlibrary("The Alchemist Paulo Coelho")
+    assert results[0]["isbn"] == "9780061122415"
+
+
+def test_search_openlibrary_no_isbn_present(app, http_mock):
+    http_mock.on_get("openlibrary.org", {
+        "docs": [{"title": "The Alchemist", "author_name": ["Paulo Coelho"]}]
+    })
+    results = metadata._search_openlibrary("The Alchemist Paulo Coelho")
+    assert results[0]["isbn"] == ""
+
+
+def test_search_googlebooks_extracts_isbn(app, http_mock):
+    http_mock.on_get("googleapis.com/books", {
+        "items": [{"volumeInfo": {
+            "title": "The Alchemist", "authors": ["Paulo Coelho"],
+            "industryIdentifiers": [
+                {"type": "ISBN_10", "identifier": "0061122416"},
+                {"type": "ISBN_13", "identifier": "9780061122415"},
+            ],
+        }}]
+    })
+    results = metadata._search_googlebooks("The Alchemist Paulo Coelho")
+    assert results[0]["isbn"] == "9780061122415"
+
+
+def test_search_googlebooks_isbn10_fallback(app, http_mock):
+    http_mock.on_get("googleapis.com/books", {
+        "items": [{"volumeInfo": {
+            "title": "The Alchemist", "authors": ["Paulo Coelho"],
+            "industryIdentifiers": [{"type": "ISBN_10", "identifier": "0061122416"}],
+        }}]
+    })
+    results = metadata._search_googlebooks("The Alchemist Paulo Coelho")
+    assert results[0]["isbn"] == "0061122416"
+
+
 # --- resolve_metadata: source cascades (mocked HTTP) ---
 
 def test_audiobook_cascade_stops_at_first_nonempty_source(app, http_mock):

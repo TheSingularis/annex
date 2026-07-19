@@ -373,6 +373,18 @@ def _search_itunes(query: str) -> list:
         return []
 
 
+def _pick_isbn(isbns: list) -> str:
+    """OpenLibrary's docs[].isbn is a list of mixed ISBN-10/ISBN-13 strings
+    with no ordering guarantee -- prefer ISBN-13."""
+    for i in isbns:
+        if len(i) == 13:
+            return i
+    for i in isbns:
+        if len(i) == 10:
+            return i
+    return ""
+
+
 def _search_openlibrary(query: str) -> list:
     try:
         resp = requests.get(
@@ -393,6 +405,7 @@ def _search_openlibrary(query: str) -> list:
                 "author": ", ".join(doc.get("author_name", [])),
                 "series": "",
                 "series_seq": "",
+                "isbn": _pick_isbn(doc.get("isbn", [])),
                 "source": "openlibrary",
                 "raw": doc,
             })
@@ -483,6 +496,13 @@ def _search_anilist(query: str) -> list:
         return []
 
 
+def _pick_google_isbn(identifiers: list) -> str:
+    """Google Books' volumeInfo.industryIdentifiers is a list of
+    {type, identifier} objects -- prefer ISBN_13 over ISBN_10."""
+    by_type = {i.get("type"): i.get("identifier", "") for i in identifiers}
+    return by_type.get("ISBN_13") or by_type.get("ISBN_10") or ""
+
+
 def _search_googlebooks(query: str) -> list:
     try:
         resp = requests.get(
@@ -500,6 +520,7 @@ def _search_googlebooks(query: str) -> list:
                 "author": ", ".join(info.get("authors", [])),
                 "series": "",
                 "series_seq": "",
+                "isbn": _pick_google_isbn(info.get("industryIdentifiers", [])),
                 "source": "googlebooks",
                 "raw": info,
             })

@@ -35,6 +35,14 @@ def test_parse_torrent_name_strips_bracketed_junk():
     assert result["title"] == "The Burning God"
 
 
+def test_parse_torrent_name_strips_azw3_extension():
+    # "azw3" was missing from the junk-word list, so it survived as a
+    # trailing word and threw off the word-count author/title heuristic.
+    result = metadata.parse_torrent_name("Dune - Frank Herbert.azw3")
+    assert result["author"] == "Frank Herbert"
+    assert result["title"] == "Dune"
+
+
 # --- series/number detection (prose) ---
 
 @pytest.mark.parametrize("name,expected", [
@@ -60,6 +68,21 @@ def test_parse_torrent_name_strips_bracketed_junk():
         "Heir of Fire: Throne of Glass, Book 3.m4b",
         {"author": "", "title": "Heir of Fire",
          "series": "Throne of Glass", "series_seq": "3"},
+    ),
+    # "Series NN - Title - Author" -- the series-first ordering, as opposed
+    # to the more common "Author - Series NN - Title".
+    (
+        "Dungeon Crawler Carl 03 - The Dungeon Anarchist's Cookbook - Matt Dinniman.epub",
+        {"author": "Matt Dinniman", "title": "The Dungeon Anarchist's Cookbook",
+         "series": "Dungeon Crawler Carl", "series_seq": "03"},
+    ),
+    # A bracketed series aside doesn't tell us author/title ordering (unlike
+    # a whole dash segment matching "<series> <N>"), so the word-count
+    # heuristic still decides between the two remaining segments.
+    (
+        "The Three-Body Problem (The Three-Body Trilogy, Book 1) - Cixin Liu.azw3",
+        {"author": "Cixin Liu", "title": "The Three Body Problem",
+         "series": "The Three-Body Trilogy", "series_seq": "1"},
     ),
 ])
 def test_parse_torrent_name_series(name, expected):

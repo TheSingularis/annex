@@ -10,7 +10,7 @@ from flask import current_app
 _BRACKET_RE = re.compile(r"[\[\(][^\]\)]*[\]\)]")
 _PUNCT_RE = re.compile(r"[,_\-\.]+")
 _JUNK_RE = re.compile(
-    r"\b(audiobook|ebook|epub|mobi|pdf|m4b|mp3|flac|aac|retail|true|unabridged"
+    r"\b(audiobook|ebook|epub|mobi|azw3?|pdf|m4b|mp3|flac|aac|retail|true|unabridged"
     r"|repack|proper|cbz|cbr|cb7|cbt|digital|scan|\d{4})\b",
     re.IGNORECASE,
 )
@@ -122,25 +122,39 @@ def parse_torrent_name(name: str) -> dict:
     if " - " in cleaned:
         segments = [s.strip() for s in cleaned.split(" - ")]
 
-        # Release convention: "Author - Series NN - Title". A middle segment
+        # Release convention: "Author - Series NN - Title", or the reverse
+        # "Series NN - Title - Author". A segment (other than the very last)
         # matching "<name> <N>" names a series entry rather than being part
         # of the author/title. Requires 3+ segments (a real author segment
         # present) -- with only 2 segments this is too ambiguous to guess
         # (e.g. "Fahrenheit 451 - A Novel" is a title with a number in it,
         # not series "Fahrenheit" book 451).
+        series_at_start = False
+        series_from_segment = False
         if not series and len(segments) >= 3:
-            for i in range(1, len(segments) - 1):
+            for i in range(len(segments) - 1):
                 m = _SEGMENT_SERIES_RE.match(segments[i])
                 if m:
                     series, series_seq = m.group("series").strip(), m.group("seq")
+                    series_at_start = i == 0
+                    series_from_segment = True
                     del segments[i]
                     break
 
-        if series:
+        if series_from_segment:
             # The series segment carried the ambiguity; whatever's left
-            # keeps its original author-first/title-last order, so no need
-            # to re-run the word-count heuristic below on the remainder.
-            if len(segments) >= 2:
+            # keeps its original relative order, so no need to re-run the
+            # word-count heuristic below on the remainder. "Series NN -
+            # Title - Author" leaves [Title, Author]; "Author - Series NN -
+            # Title" leaves [Author, ..., Title]. (A series found via the
+            # bracketed-aside case above carries no such positional info,
+            # so it still falls through to the heuristic below.)
+            if series_at_start and len(segments) >= 2:
+                result = {
+                    "author": _clean_title(segments[-1]),
+                    "title": _clean_title(" - ".join(segments[:-1])),
+                }
+            elif len(segments) >= 2:
                 result = {
                     "author": _clean_title(segments[0]),
                     "title": _clean_title(" - ".join(segments[1:])),

@@ -1,0 +1,2882 @@
+{
+ "_meta": {
+  "description": "Regression corpus for the Annex matcher rebuild (see /root/.claude/plans/jolly-greeting-karp.md). Captured from a live manual triage session on 2026-07-19 covering every needs_review record at that time (219 entries), plus a handful of confirmed false positives from the imported set as explicit traps.",
+  "coverage_caveat": "Only 1 of 219 entries is a comic/manga filename -- the comic/manga recognizer path is essentially untested by this corpus. Treat that as a known gap, not full coverage, when validating Phase 1.",
+  "resolution_categories": {
+   "auto_approved_top_candidate": "Live matcher's own top-scored candidate was verified correct by hand and approved as-is.",
+   "manual_override": "Live matcher's top candidate was wrong or missing; correct answer determined by hand (filename + general book knowledge) and submitted directly.",
+   "skipped_ambiguous": "No confident correct answer could be determined (degraded/generic filename, or genuinely ambiguous). expected is null -- these should NOT produce a high-confidence auto-match.",
+   "known_false_positive_trap": "This record was auto-imported by the live matcher onto the WRONG book/edition. See the note field for what it wrongly matched."
+  },
+  "counts": {
+   "total": 223,
+   "auto_approved_top_candidate": 83,
+   "manual_override": 126,
+   "skipped_ambiguous": 10,
+   "known_false_positive_trap": 4
+  }
+ },
+ "entries": [
+  {
+   "id": 890,
+   "name": "Fascism A Warning (Unabridged)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Madeleine Albright",
+    "title": "Fascism",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 891,
+   "name": "Caroline Peckham, Susanne Valenti - Zodiac Academy 08 - Sorrow and Starlight",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Caroline Peckham, Susanne Valenti",
+    "title": "Sorrow and Starlight",
+    "series": "Zodiac Academy",
+    "series_seq": "8"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 892,
+   "name": "Robin Hobb - Ship of Magic The Liveship Traders, Book 1 The Liveship Traders, Book 1 (Unabridged, M4B, Monolithic)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Robin Hobb",
+    "title": "Ship of Magic",
+    "series": "Liveship Traders",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 893,
+   "name": "It by Stephen King",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Stephen King",
+    "title": "It",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 894,
+   "name": "Renegades 03 - Supernova.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Marissa Meyer",
+    "title": "Supernova",
+    "series": "Renegades",
+    "series_seq": "3"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 895,
+   "name": "Babel by R. F. Kuang (m4b)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "R. F. Kuang",
+    "title": "Babel",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 896,
+   "name": "If I Did It by The Goldman Family, O.J. Simpson",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "The Goldman Family, Pablo F. Fenjves, Dominick Dunne",
+    "title": "If I Did It",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 897,
+   "name": "Aiden Thomas - The Sunbearer Duology 02 - Celestial Monsters",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Aiden Thomas",
+    "title": "Celestial Monsters",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 898,
+   "name": "Fried Green Tomatoes mp3",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Fannie Flagg",
+    "title": "Fried Green Tomatoes at the Whistle Stop Cafe",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 899,
+   "name": "1962 - A Clockwork Orange (Crystal) 56k 05.43.10 {137mb}",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Anthony Burgess",
+    "title": "A Clockwork Orange",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 900,
+   "name": "Glukhovsky, Dmitry - Metro 2033",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Dmitry Glukhovsky",
+    "title": "Metro 2033",
+    "series": "Metro",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 901,
+   "name": "Agatha Christie - HP 04 (1926) - The Murder of Roger Ackroyd - 141pt Bailey U 2006 CD 64k",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Agatha Christie",
+    "title": "The Murder of Roger Ackroyd",
+    "series": "Hercule Poirot",
+    "series_seq": "4"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 902,
+   "name": "Caroline Peckham, Susanne Valenti - Supernatural Beasts and Bullies 05 - Zodiac Academy - Cursed Fates",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Caroline Peckham, Susanne Valenti",
+    "title": "Cursed Fates",
+    "series": "Zodiac Academy",
+    "series_seq": "5"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 903,
+   "name": "T.J. Klune - The Bones Beneath My Skin",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "T.J. Klune",
+    "title": "The Bones Beneath My Skin",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 904,
+   "name": "Heir of Fire꞉ Throne of Glass, Book 3.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Sarah J. Maas",
+    "title": "Heir of Fire",
+    "series": "Throne of Glass",
+    "series_seq": "3"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 905,
+   "name": "Holly Black - The Stolen Heir A Novel of Elfhame",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Holly Black",
+    "title": "The Stolen Heir",
+    "series": "The Folk of the Air",
+    "series_seq": "1, The Stolen Heir"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 906,
+   "name": "Kristen Ciccarelli - The Crimson Moth 01 - Heartless Hunter",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Kristen Ciccarelli",
+    "title": "Heartless Hunter : The Crimson Moth - Tome 1 (version française)",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 907,
+   "name": "Stephen.King.Billy.Summers.64k.2021",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Antonio Manuel Jiménez Martín",
+    "title": "Stephen King",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 908,
+   "name": "Brandon Sanderson - The Way of Kings - Book One of the Stormlight Archive (Unabridged)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brandon Sanderson",
+    "title": "The Way of Kings",
+    "series": "The Stormlight Archive",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 909,
+   "name": "Caroline Peckham, Susanne Valenti - Zodiac Academy 07 - Heartless Sky",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Caroline Peckham, Susanne Valenti",
+    "title": "Heartless Sky",
+    "series": "Zodiac Academy",
+    "series_seq": "7"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 910,
+   "name": "02 Wayward (alt)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Blake Crouch",
+    "title": "Wayward",
+    "series": "Wayward Pines",
+    "series_seq": "2"
+   },
+   "resolution": "manual_override",
+   "note": "Live approval race: this ID had already been auto-approved with candidate_index=0 by the time this correction was submitted, so the correction never reached the server. That top-candidate match was wrong -- fixed separately via a new manual-import record on 2026-07-19."
+  },
+  {
+   "id": 911,
+   "name": "Mistborn",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brandon Sanderson",
+    "title": "The Final Empire",
+    "series": "Mistborn",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 912,
+   "name": "Kerri Maniscalco - Stalking Jack the Ripper 04 - Capturing The Devil",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Kerri Maniscalco",
+    "title": "Capturing the Devil",
+    "series": "Stalking Jack the Ripper",
+    "series_seq": "4"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 913,
+   "name": "Yellowface by R. F. Kuang.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "R. F. Kuang",
+    "title": "Yellowface",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 914,
+   "name": "Big Bad Wolf 1 - The Wolf at the Door - Charlie Adhara",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Charlie Adhara",
+    "title": "The Wolf at the Door",
+    "series": "Big Bad Wolf",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 915,
+   "name": "mm-ya--white_rabbit-caleb_roehrig",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Caleb Roehrig",
+    "title": "White Rabbit (Unabridged)",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 916,
+   "name": "Ibram X. Kendi -- Stamped from the Beginning - The Definitive History of Racist Ideas in America (2016)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Ibram X. Kendi",
+    "title": "Stamped from the Beginning",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 917,
+   "name": "Zodiac Academy [03] The Reckoning (1 of 2)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Caroline Peckham, Susanne Valenti",
+    "title": "The Reckoning",
+    "series": "Zodiac Academy",
+    "series_seq": "3"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 918,
+   "name": "Robin Hobb - Royal Assassin The Farseer Trilogy, Book 2 (Unabridged, M4B, Monolithic)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Robin Hobb",
+    "title": "Royal Assassin",
+    "series": "Farseer Trilogy",
+    "series_seq": "2"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 919,
+   "name": "Bret Easton Ellis - The Shards 128kbps",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Bret Easton Ellis",
+    "title": "The Shards",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 920,
+   "name": "Joe Abercrombie - The First Law Trilogy 1 - The Blade Itself",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Joe Abercrombie",
+    "title": "The Blade Itself",
+    "series": "The First Law",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 921,
+   "name": "Sarah J. Maas - Tower of Dawn A Throne of Glass Novel (Unabridged)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Sarah J. Maas",
+    "title": "Tower of Dawn",
+    "series": "Throne of Glass",
+    "series_seq": "6"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 922,
+   "name": "Suicide Med by Freida McFadden",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Freida McFadden",
+    "title": "Dead Med",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 923,
+   "name": "Rhythm of War The Stormlight Archive, Book 4.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brandon Sanderson",
+    "title": "Rhythm of War",
+    "series": "The Stormlight Archive",
+    "series_seq": "4"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 924,
+   "name": "Leigh Rivers - Little Stranger- A Dark Taboo Romance",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Leigh Rivers",
+    "title": "Little Liar: A Dark Taboo Romance (The Web of Silence Duet, Book 2) (Unabridged)",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 925,
+   "name": "Armand Gamache   Still Life",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Louise Penny",
+    "title": "Still Life",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 927,
+   "name": "David Stone - AMD 02 - The Orpheus Deception",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "David Stone",
+    "title": "The Orpheus Deception",
+    "series": "A Micah Dalton Thriller",
+    "series_seq": "2"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 928,
+   "name": "Joe Abercrombie - The Blade Itself The First Law Book One (Unabridged)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Joe Abercrombie",
+    "title": "The Blade Itself",
+    "series": "The First Law",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override",
+   "note": "Live approval race: this ID had already been auto-approved with candidate_index=0 by the time this correction was submitted, so the correction never reached the server. The top-candidate match happened to be close enough to acceptable, left as-is."
+  },
+  {
+   "id": 929,
+   "name": "Caroline Peckham, Susanne Valenti - Zodiac Academy 06 - Fated Throne",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Caroline Peckham, Susanne Valenti",
+    "title": "Fated Throne",
+    "series": "Zodiac Academy",
+    "series_seq": "6"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 930,
+   "name": "Pines- Blake Crouch",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Blake Crouch",
+    "title": "Pines",
+    "series": "Wayward Pines",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 931,
+   "name": "2022 - The Paradox Hotel (Zeller) 62k 11.05.50 {301mb}",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Rob Hart",
+    "title": "The Paradox Hotel",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 932,
+   "name": "Wayward Pines 02 - Wayward",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Blake Crouch",
+    "title": "Pines",
+    "series": "Wayward Pines",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override",
+   "note": "Live approval race: this ID had already been auto-approved with candidate_index=0 by the time this correction was submitted, so the correction never reached the server. That top-candidate match was wrong -- fixed separately via a new manual-import record on 2026-07-19."
+  },
+  {
+   "id": 933,
+   "name": "Lynn Flewelling Nightrunner Bk 03 Traitor's Moon ( U 96.22 DL )",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Lynn Flewelling",
+    "title": "Traitor’s Moon (The Nightrunner Series)",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 934,
+   "name": "The Hunger Games Trilogy - Suzanne Collins",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Suzanne Collins, Alexandre D'Elia",
+    "title": "Jogos vorazes [The Hunger Games]",
+    "series": "Jogos Vorazes [The Hunger Games]",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 935,
+   "name": "The Fall Risk꞉ A Short Story by Abby Jimenez.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Abby Jimenez",
+    "title": "The Fall Risk",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 936,
+   "name": "flewelling, lynn - nr03-Traitor's Moon",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Lynn Flewelling",
+    "title": "Traitor’s Moon (The Nightrunner Series)",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 937,
+   "name": "words of radiance (unabridged) brandon sanderson - book 2 of the stormlight archive",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brandon Sanderson",
+    "title": "Words of Radiance",
+    "series": "The Stormlight Archive",
+    "series_seq": "2"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 938,
+   "name": "The Devil Wears Scrubs",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Freida McFadden",
+    "title": "The Devil You Know",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 939,
+   "name": "Matt Dinniman - Dungeon Crawler Carl, Book 2 - Carl's Doomsday Scenario.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Matt Dinniman",
+    "title": "Carl's Doomsday Scenario",
+    "series": "Dungeon Crawler Carl",
+    "series_seq": "2"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 940,
+   "name": "The Witcher",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Andrzej Sapkowski",
+    "title": "The Last Wish",
+    "series": "The Witcher",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 941,
+   "name": "Scott Lynch - The Gentleman Bastard Sequence 1 - The Lies of Locke Lamora",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Scott Lynch",
+    "title": "The Lies of Locke Lamora",
+    "series": "Gentleman Bastard Sequence",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 942,
+   "name": "01 Metro 2033",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Dmitry Glukhovsky",
+    "title": "Metro 2033",
+    "series": "Metro",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 943,
+   "name": "Too Much and Never Enough - How My Family Created the World's Most Dangerous Man.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Mary L. Trump",
+    "title": "Too Much and Never Enough",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 944,
+   "name": "Piranesi by Susanna Clarke.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Susanna Clarke",
+    "title": "Piranesi",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 945,
+   "name": "Robin Hobb - 01 - Assassins Apprentice (Farseer) (Unabridged)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Robin Hobb",
+    "title": "The Farseer: Assassin's Apprentice",
+    "series": "Farseer Trilogy",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 946,
+   "name": "tarot_sequence01-the_last_sun-kd_edwards",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "K.D. Edwards",
+    "title": "The Last Sun",
+    "series": "The Tarot Sequence",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 947,
+   "name": "Stephen King - The Dark Tower I The Gunslinger",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Stephen King",
+    "title": "Dark Tower I",
+    "series": "The Dark Tower",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 948,
+   "name": "Blake Crouch - The Last Town Wayward Pines, Book 3 (Unabridged) (2014)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Blake Crouch",
+    "title": "The Last Town",
+    "series": "Wayward Pines",
+    "series_seq": "3"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 950,
+   "name": "The Christmas Tree Farm The Dream Harbour, Book 3.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Laurie Gilmore",
+    "title": "The Christmas Tree Farm",
+    "series": "The Dream Harbor",
+    "series_seq": "3"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 951,
+   "name": "Caroline Peckham, Susanne Valenti - Shadow Princess Zodiac Academy, Book 4",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Caroline Peckham, Susanne Valenti",
+    "title": "Shadow Princess",
+    "series": "Zodiac Academy",
+    "series_seq": "4"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 952,
+   "name": "Xiran Jay Zhao - Iron Widow m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Xiran Jay Zhao",
+    "title": "Iron Widow",
+    "series": "Iron Widow",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 953,
+   "name": "Matt Dinniman - Dungeon Crawler Carl, Book 3 - The Dungeon Anarchist's Cookbook.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Matt Dinniman",
+    "title": "The Dungeon Anarchist's Cookbook",
+    "series": "Dungeon Crawler Carl",
+    "series_seq": "3"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 954,
+   "name": "flewelling, lynn - nr01-Luck in the Shadows",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Lynn Flewelling",
+    "title": "Luck in the Shadows (The Nightrunner Series)",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 955,
+   "name": "Harry Potter (by J.K. Rowling) - The Complete Story (read by Stephen Fry) [V0]",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "J.K. Rowling",
+    "title": "Harry Potter: The Complete Collection",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 956,
+   "name": "Edward Ashton – Mickey7.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Edward Ashton",
+    "title": "Mickey7",
+    "series": "Mickey7",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 957,
+   "name": "Rebecca by Daphne du Maurier (Audiobook)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Daphne du Maurier",
+    "title": "Daphne du Maurier: The BBC Radio Collection",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 958,
+   "name": "Taylor Jenkins Reid - Atmosphere.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Taylor Jenkins Reid, Babette Schröder - translator",
+    "title": "Atmosphere [German Edition]",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 959,
+   "name": "Hoax Donald Trump, Fox News, and the Dangerous Distortion of Truth.M4B",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brian Stelter",
+    "title": "Hoax: Donald Trump, Fox News, and the Dangerous Distortion of Truth",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 960,
+   "name": "Sarah J. Maas - Crown of Midnight A Throne of Glass Novel (Unabridged)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Sarah J. Maas",
+    "title": "Crown of Midnight",
+    "series": "Throne of Glass",
+    "series_seq": "2"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 961,
+   "name": "stephen king mr. mercedes (unabridged",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Stephen King",
+    "title": "Mr. Mercedes",
+    "series": "Bill Hodges Trilogy",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 962,
+   "name": "Caroline Peckham, Susanne Valenti - The Reckoning (An Academy Bully Romance) Zodiac Academy, Book 3",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Caroline Peckham, Susanne Valenti",
+    "title": "The Reckoning",
+    "series": "Zodiac Academy",
+    "series_seq": "3"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 963,
+   "name": "Olivia Waite - Dorothy Gentleman 1 - Murder by Memory.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Olivia Waite",
+    "title": "Murder by Memory",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 964,
+   "name": "Brigid Kemmerer - Forging Silver into Stars 02 - Carving Shadows into Gold.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brigid Kemmerer",
+    "title": "Forging Silver into Stars",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 965,
+   "name": "Margaret Attwood - The Handmaid's Tale",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Margaret Atwood",
+    "title": "The Handmaid's Tale",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 967,
+   "name": "Verity Guild-Mai Corland-English.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Mai Corland",
+    "title": "Verity Guild",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 968,
+   "name": "Robin Hobb - Fool's Assassin Book One of the Fitz and the Fool Trilogy",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Robin Hobb",
+    "title": "Fool's Assassin",
+    "series": "Realms of the Elderlings",
+    "series_seq": "14"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 969,
+   "name": "Lynn Flewelling Nightrunner Bk 02 Stalking Darkness ( U 96.22 DL )",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Lynn Flewelling",
+    "title": "Stalking Darkness (The Nightrunner Series)",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 970,
+   "name": "Maureen Johnson - The Vanishing Stair Truly Devious Series, Book 2",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Maureen Johnson",
+    "title": "The Vanishing Stair",
+    "series": "Truly Devious",
+    "series_seq": "2"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 971,
+   "name": "Sabaa Tahir - A Reaper at the Gates An Ember in the Ashes, Book 3",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Sabaa Tahir",
+    "title": "A Reaper at the Gates (Unabridged)",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 972,
+   "name": "Doppelganger A Trip into The Mirror World",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Naomi Klein",
+    "title": "Doppelganger",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 973,
+   "name": "Jennifer Lynn Barnes - The Grandest Game 2 - Glorious Rivals.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Jennifer Lynn Barnes, Ivana Marinović - Übersetzer",
+    "title": "Glorious Rivals",
+    "series": "The Grandest Game",
+    "series_seq": "2"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 974,
+   "name": "Inheritance Cycle - 01 - Eragon.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Christopher Paolini",
+    "title": "Eragon",
+    "series": "Inheritance Cycle",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 975,
+   "name": "Wicked Saints - Emily A Duncan (MP3)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Emily A. Duncan",
+    "title": "Wicked Saints",
+    "series": "Something Dark and Holy",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 976,
+   "name": "Brandon Sanderson; Edgedancer; From the Stormlight Archive (MP3)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brandon Sanderson",
+    "title": "Edgedancer",
+    "series": "The Stormlight Archive",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 977,
+   "name": "Somewhere Beyond the Sea - Cerulean Chronicles, Book 2.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Terry R. Bacon",
+    "title": "The Cerulean Ark",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 978,
+   "name": "The Butcher's Masquerade Dungeon Crawler Carl, Book 5",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Matt Dinniman",
+    "title": "The Butcher's Masquerade",
+    "series": "Dungeon Crawler Carl",
+    "series_seq": "5"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 979,
+   "name": "Supernova Renegades Series, Book 3.mp3",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Marissa Meyer",
+    "title": "Supernova",
+    "series": "Renegades",
+    "series_seq": "3"
+   },
+   "resolution": "manual_override",
+   "note": "Live approval race: this ID had already been auto-approved with candidate_index=0 by the time this correction was submitted, so the correction never reached the server. The top-candidate match happened to be close enough to acceptable, left as-is."
+  },
+  {
+   "id": 980,
+   "name": "American Gods 10th Anniversary",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Neil Gaiman",
+    "title": "American Gods [TV Tie-In]",
+    "series": "American Gods",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 981,
+   "name": "Cujo by Stephen King",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Stephen King",
+    "title": "Cujo",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 982,
+   "name": "Annihilation by Jeff Vandermeer",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Jeff VanderMeer",
+    "title": "Annihilation",
+    "series": "The Southern Reach Trilogy",
+    "series_seq": "1"
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 983,
+   "name": "Pet Sematary CD m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Stephen King",
+    "title": "Pet Sematary",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 984,
+   "name": "Jim Butcher - The Chronological Dresden Files (2015)",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Jim Butcher",
+    "title": "The Dresden Files",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 985,
+   "name": "Inheritance Cycle - 03 - Brisingr.m4b",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Christopher Paolini",
+    "title": "Brisingr: Inheritance, Book III (Unabridged)",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 986,
+   "name": "Christine by Stephen King",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Stephen King",
+    "title": "Christine [German Edition]",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 987,
+   "name": "Homer - The Odyssey - read by Ian McKellen",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Homer",
+    "title": "The Odyssey",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override",
+   "note": "Live approval race: this ID had already been auto-approved with candidate_index=0 by the time this correction was submitted, so the correction never reached the server. The top-candidate match happened to be close enough to acceptable, left as-is."
+  },
+  {
+   "id": 988,
+   "name": "Cixin Liu - Death's End (The Three-Body Problem, Book 3)",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Cixin Liu",
+    "title": "Cixin Liu Bestselling Collecting Books Series, Set of 4 Books. the Three-Body Problem, the Wandering Earth, the Dark Forest and Death's End",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 989,
+   "name": "Mistborn Trilogy - Brandon Sanderson.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brandon Sanderson",
+    "title": "Mistborn Trilogy",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 990,
+   "name": "Brandon Sanderson - Mistborn Trilogy",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brandon Sanderson",
+    "title": "Mistborn Trilogy",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override",
+   "note": "Live approval race: this ID had already been auto-approved with candidate_index=0 by the time this correction was submitted, so the correction never reached the server. The top-candidate match happened to be close enough to acceptable, left as-is."
+  },
+  {
+   "id": 991,
+   "name": "Doppelganger_ A Trip into the Mirror World - Naomi Klein.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Naomi Klein",
+    "title": "Doppelganger",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 992,
+   "name": "Woman Of Tomorrow",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": null,
+   "resolution": "skipped_ambiguous"
+  },
+  {
+   "id": 993,
+   "name": "The Dark Forest - Cixin Liu.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Cixin Liu",
+    "title": "Cixin Liu Bestselling Collecting Books Series, Set of 4 Books. the Three-Body Problem, the Wandering Earth, the Dark Forest and Death's End",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 994,
+   "name": "MAM The Girl on the Train - Paula Hawkins",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Paula Hawkins",
+    "title": "The Girl on the Train",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 995,
+   "name": "In Memoriam- Alice Winn.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Alice Winn",
+    "title": "In Memoriam",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 996,
+   "name": "Detectives, Adventure & Stephen King",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": null,
+   "resolution": "skipped_ambiguous"
+  },
+  {
+   "id": 998,
+   "name": "Chris Rylander - [An Epic Series of Failures 03] - The Rise of Greg.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Chris Rylander",
+    "title": "The Rise of Greg",
+    "series": "An Epic Series of Failures",
+    "series_seq": "3"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 999,
+   "name": "The Goblin Emperor - Katherine Addison",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Sarah Monette",
+    "title": "The Goblin Emperor",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1000,
+   "name": "Kishimi, Ichiro - The Courage To Be Disliked.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Ichirō Kishimi, Fumitake Koga, Montserrat Asensio Fernández",
+    "title": "The Courage to Be Happy",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1001,
+   "name": "White Hole Book 3 - Kitty King.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Kitty King",
+    "title": "White Hole",
+    "series": "White Hole",
+    "series_seq": "3"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1002,
+   "name": "The Imposition 2024.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Sandra Burman, Barbara E. Harrell-Bond",
+    "title": "The Imposition of law",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1003,
+   "name": "Can't Spell Treason Without Tea - Rebecca Thorne.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Rebecca Thorne",
+    "title": "Can't Spell Treason Without Tea",
+    "series": "Tomes & Tea",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1004,
+   "name": "Elden Ring The Road to the Erdtree, Vol. 3 (Nikiichi Tobita, John Neal, Phil Christie etc.) .pdf",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Nikiichi Tobita, Inc FromSoftware, John Neal, Abigail Blackman",
+    "title": "Elden Ring",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1006,
+   "name": "Paul T. Mason, MS, Randi Kreger - Stop Walking on Eggshells, Third Edition.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Paul T. Mason, Randi Kreger",
+    "title": "Stop Walking on Eggshells",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1007,
+   "name": "Laurie Gilmore - The Dream Harbor 02 - The Cinnamon Bun Book Store.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Laurie Gilmore",
+    "title": "The Cinnamon Bun Book Store",
+    "series": "The Dream Harbor",
+    "series_seq": "02"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1008,
+   "name": "The Institute - Stephen King - corrected.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Stephen King",
+    "title": "The Institute",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1009,
+   "name": "Witcher Series",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Ted West",
+    "title": "Witcher Universe",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1010,
+   "name": "The Alchemist - Paulo Coelho (25th Anniversary Edition).azw3",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Paulo Coelho",
+    "title": "The Alchemist",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1011,
+   "name": "Philip Pullman",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Philip Pullman",
+    "title": "His Dark Materials",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1012,
+   "name": "Mickey7_A Novel - Edward Ashton.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Edward Ashton",
+    "title": "Mickey7 Series, 2 Books Set, Mickey7, Antimatter Blues, by Edward Ashton",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1013,
+   "name": "Shameless_ Republicans' Deliberate Dysfunction and the Battle to Preserve Democracy - Brian Tyler Cohen.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brian Tyler Cohen",
+    "title": "Shameless: Republicans' Deliberate Dysfunction and the Battle to Preserve Democracy",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1015,
+   "name": "Bullet Train - Kotaro Isaka.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Kotaro Isaka",
+    "title": "Bullet Train",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1016,
+   "name": "Billy Balibally - FANGS",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Billy Balibally",
+    "title": "FANGS",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1017,
+   "name": "The Seven Husbands of Evelyn Hu - Taylor Jenkins Reid.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Taylor Jenkins Reid",
+    "title": "The Seven Husbands of Evelyn Hugo",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1018,
+   "name": "the_deep_cutter_nick.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Nick Cutter",
+    "title": "The Deep",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1019,
+   "name": "Tomorrow_and_Tomorrow_and_Tom_-_Gabrielle_Zevin.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Gabrielle Zevin",
+    "title": "Tomorrow, and Tomorrow, and Tomorrow",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1020,
+   "name": "Hobb,_Robin_-_The_Farseer_Trilogy_01_-_Assassin's_Apprentice..mobi",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Robin Hobb",
+    "title": "Assassin's Apprentice",
+    "series": "The Farseer Trilogy",
+    "series_seq": "01"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1021,
+   "name": "Hobb,_Robin_-_The_Farseer_Trilogy_02_-_Royal_Assassin..mobi",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Robin Hobb",
+    "title": "Royal Assassin",
+    "series": "The Farseer Trilogy",
+    "series_seq": "02"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1022,
+   "name": "Piranesi by Susanna Clarke",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Susanna Clarke",
+    "title": "Piranesi",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1023,
+   "name": "cbzs",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": null,
+   "resolution": "skipped_ambiguous"
+  },
+  {
+   "id": 1024,
+   "name": "Sara J Mass - Tower of Dawn",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Sarah J. Maas",
+    "title": "Tower of Dawn",
+    "series": "Throne of Glass",
+    "series_seq": "6"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1025,
+   "name": "Christie Brinkley - Uptown Girl.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Christie Brinkley",
+    "title": "Uptown Girl",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1026,
+   "name": "The Forgotten Colony (A Zach Cr - J.B. Ryder.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": null,
+   "resolution": "skipped_ambiguous"
+  },
+  {
+   "id": 1027,
+   "name": "we_are_legion_we_are_bob_bobiverse_book_1__taylor_dennis_e.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Dennis E. Taylor",
+    "title": "We Are Legion (We Are Bob)",
+    "series": "Bobiverse",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1028,
+   "name": "The Diary of a Young Girl_ The Definitiv (1034)",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Anne Frank",
+    "title": "The Diary of a Young Girl",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1029,
+   "name": "Naomi Lucas & Mel Braxton - The Scarecrow's Queen",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Naomi Lucas, Mel Braxton",
+    "title": "The Scarecrow's Queen",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1030,
+   "name": "Hoax_ Donald Trump, Fox News, a - Brian Stelter.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brian Stelter",
+    "title": "Hoax: Donald Trump, Fox News, and the Dangerous Distortion of Truth",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1031,
+   "name": "The Senator's Wife - Jen Lyon.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": null,
+   "resolution": "skipped_ambiguous"
+  },
+  {
+   "id": 1035,
+   "name": "How Linux Works - What Every Superuser Should Know, 3rd Edition",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brian Ward",
+    "title": "How Linux Works",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1036,
+   "name": "HuntingPrinceDracula",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Kerri Maniscalco",
+    "title": "Hunting Prince Dracula",
+    "series": "Stalking Jack the Ripper",
+    "series_seq": "2"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1038,
+   "name": "The Bone Season 10th Anniversary Edition Samantha Shannon .epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Samantha Shannon",
+    "title": "The Bone Season",
+    "series": "The Bone Season",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1039,
+   "name": "The_Very_Secret_Society_of_Irre_-_Sangu_Mandanna.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Sangu Mandanna",
+    "title": "The Very Secret Society of Irregular Witches",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1040,
+   "name": "This Is How You Lose the Time W - Amal El-Mohtar.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Amal El-Mohtar, Max Gladstone",
+    "title": "This Is How You Lose the Time War",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1041,
+   "name": "On the Calculation of Volume I by Solvej Balle.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Solvej Balle",
+    "title": "On the Calculation of Volume I",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1042,
+   "name": "This Inevitable Ruin_ Dungeon C - Matt Dinniman",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Matt Dinniman",
+    "title": "This Inevitable Ruin",
+    "series": "Dungeon Crawler Carl",
+    "series_seq": "7"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1043,
+   "name": "Lynn_Flewelling_-_Nightrunners_01_-_Luck_in_the_Shadows..pdf",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Lynn Flewelling",
+    "title": "Luck in the Shadows",
+    "series": "Nightrunner",
+    "series_seq": "01"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1044,
+   "name": "Little Liar_ A Dark Taboo Romance",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Leigh Rivers",
+    "title": "Little Liar",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1046,
+   "name": "McCarthy,_Cormac_-_All_The_Pretty_Horses_v1.1_(rtf)",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Cormac McCarthy",
+    "title": "All the Pretty Horses",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1047,
+   "name": "Death's End (Remembrance of Earth's Past) by Cixin Liu.pdf",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Cixin Liu",
+    "title": "Cixin Liu Bestselling Collecting Books Series, Set of 4 Books. the Three-Body Problem, the Wandering Earth, the Dark Forest and Death's End",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1048,
+   "name": "Elden Ring The Road to the Erdtree, Vol. 1 (Nikiichi Tobita, FromSoftware) .pdf",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Nikiichi Tobita, Inc FromSoftware, John Neal, Abigail Blackman",
+    "title": "Elden Ring",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1049,
+   "name": "The_Butchers_Masquerade__Dunge_-_Matt_Dinniman.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Matt Dinniman",
+    "title": "The Butcher's Masquerade",
+    "series": "Dungeon Crawler Carl",
+    "series_seq": "5"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1051,
+   "name": "Heaven Official's Blessing - Tian Guan Ci Fu v01 [Seven Seas] [LuCaZ].epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Mo Xiang Tong Xiu",
+    "title": "Heaven Official's Blessing",
+    "series": "Tian Guan Ci Fu",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1052,
+   "name": "Fathomfolk by Eliza Chan.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Eliza Chan",
+    "title": "Fathomfolk",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1053,
+   "name": "Sabaa Tahir - An Ember in the Ashes 03 - A Reaper at the Gates.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Sabaa Tahir",
+    "title": "A Reaper at the Gates",
+    "series": "An Ember in the Ashes",
+    "series_seq": "03"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1054,
+   "name": "Sw01ordOfKaigenAoniteWarStory.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "M. L. Wang",
+    "title": "The Sword of Kaigen",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1056,
+   "name": "The_Carnivale_of_Curiosities_-_Amiee_Gibbs.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Amiee Gibbs",
+    "title": "The Carnivale of Curiosities",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1057,
+   "name": "Heaven Official's Blessing_ Tia - Mo Xiang Tong Xiu.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Mo Xiang Tong Xiu",
+    "title": "Heaven Official's Blessing",
+    "series": "Tian Guan Ci Fu",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1058,
+   "name": "The Murder On The Links.cbr",
+   "category": "ebook",
+   "is_comic": true,
+   "expected": {
+    "author": "Agatha Christie",
+    "title": "The Murder on the Links",
+    "series": "Hercule Poirot",
+    "series_seq": "2"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1059,
+   "name": "Lisa Genova - More or Less Maddy  US.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Lisa Genova",
+    "title": "More or Less Maddy",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1060,
+   "name": "The Hunter (Monsters and Beauties, 2) by Jenika Snow.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Jenika Snow",
+    "title": "The Hunter",
+    "series": "Monsters and Beauties",
+    "series_seq": "2"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1061,
+   "name": "Sparking Fire Out of Fate (Brigid Kemmerer).epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": null,
+   "resolution": "skipped_ambiguous"
+  },
+  {
+   "id": 1062,
+   "name": "Asimov - Robot, Empire and Foundation Series",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Isaac Asimov",
+    "title": "Robot, Empire and Foundation Series",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1063,
+   "name": "The Beast (Monsters and Beauties, 1) by Jenika Snow.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Jenika Snow",
+    "title": "The Beast",
+    "series": "Monsters and Beauties",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1064,
+   "name": "Jim Butcher - Dresden Files 01 - Storm Front (v5) (epub).epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Jim Butcher",
+    "title": "Storm Front",
+    "series": "The Dresden Files",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1066,
+   "name": "Blake Crouch-Pines",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Blake Crouch, Paul Michael Garcia",
+    "title": "Blake Crouch - The Wayward Pines 3-in-1 Collection",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1067,
+   "name": "Grandmaster of Demonic Cultivat V2 - Mo Xiang Tong Xiu.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Mo Xiang Tong Xiu",
+    "title": "Grandmaster of Demonic Cultivation",
+    "series": "",
+    "series_seq": "2"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1068,
+   "name": "Just Friends - Haley Pham.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Haley Pham",
+    "title": "Just Friends",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1069,
+   "name": "Music An Appreciation, 8th Brief Edition.pdf",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Roger Kamien",
+    "title": "Music: An Appreciation, 8th Brief Edition",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1070,
+   "name": "Dark Rise_ Dark Rise 1 - C S Pacat.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "C. S. Pacat",
+    "title": "Dark Rise",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1071,
+   "name": "Complete Ender Epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Jason Johns",
+    "title": "Ultimate Minecraft - the Complete Crafting Recipe Book and Guide",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1073,
+   "name": "HCassLeast.mobi",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": null,
+   "resolution": "skipped_ambiguous"
+  },
+  {
+   "id": 1074,
+   "name": "Edgedancer (Stormlight Archive 2.5) by Brandon Sanderson",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brandon Sanderson",
+    "title": "Edgedancer",
+    "series": "The Stormlight Archive",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1075,
+   "name": "Remembrance of Earth's Past - Cixin Liu.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "刘慈欣, Ken Liu, Joel Martinsen",
+    "title": "Remembrance of Earth's Past",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1076,
+   "name": "Larry McMurtry Lonesome Dove Series (4) epub, mobi",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Larry McMurtry",
+    "title": "Lonesome Dove Series",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1077,
+   "name": "They Way of Kings - Brandon Sanderson",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brandon Sanderson",
+    "title": "The Way of Kings",
+    "series": "The Stormlight Archive",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1078,
+   "name": "Gone Before Goodbye - Harlan Coben.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Harlan Coben",
+    "title": "Gone Before Goodbye",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1081,
+   "name": "The Dresden Files (1-15 + Side Jobs + Working for Bigfoot) AZW3",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Jim Butcher",
+    "title": "The Dresden Files",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1082,
+   "name": "Six of Crows 01 - Six of Crows",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Leigh Bardugo",
+    "title": "Six of Crows",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1083,
+   "name": "Rebecca Zung, Esq - SLAY the Bully",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Rebecca Zung",
+    "title": "SLAY the Bully",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1084,
+   "name": "Homer - The Odyssey (Edward McCrorie tr) - 0801882672.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Homer",
+    "title": "The Odyssey",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1085,
+   "name": "The_Girl_Who_Fell_Beneath_the_S_-_Axie_Oh.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Axie Oh",
+    "title": "The Girl Who Fell Beneath the Sea",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1086,
+   "name": "Almost Life UK - Kiran Millwood Hargrave.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": null,
+   "resolution": "skipped_ambiguous"
+  },
+  {
+   "id": 1087,
+   "name": "The Best Way to Bury Your Husba - Alexia Casale.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Alexia Casale",
+    "title": "The Best Way to Bury Your Husband",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1088,
+   "name": "[POR]Artemis by Weir Andy.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Andy Weir",
+    "title": "Artemis",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1089,
+   "name": "The Dungeon Anarchist's Cookboo - Matt Dinniman.azw3",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Matt Dinniman",
+    "title": "The Dungeon Anarchist's Cookbook",
+    "series": "Dungeon Crawler Carl",
+    "series_seq": "3"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1090,
+   "name": "He's the Devil by Tobi Coventry.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Tobi Coventry",
+    "title": "He's the Devil",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1091,
+   "name": "Pittacus Lore",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Pittacus Lore",
+    "title": "Pittacus Lore Box Set",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1092,
+   "name": "Paulo Coelho - The Alchemist (10th Anniversary ed) - 9780061741241.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Paulo Coelho",
+    "title": "The Alchemist",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1093,
+   "name": "The Mask Falling - Author's preferred text - Samantha Shannon.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Samantha Shannon",
+    "title": "The Mask Falling",
+    "series": "The Bone Season",
+    "series_seq": "4"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1094,
+   "name": "epub-download-surrounded-by-idiots-by-thomas-erikson-9781785042188-ucs.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Thomas Erikson",
+    "title": "Surrounded by Idiots",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1095,
+   "name": "The Eye of the Bedlam Bride_ Du - Matt Dinniman.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Matt Dinniman",
+    "title": "The Eye of the Bedlam Bride",
+    "series": "Dungeon Crawler Carl",
+    "series_seq": "6"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1096,
+   "name": "Alexander Boldizar - The Man Who Saw Seconds.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Alexander Boldizar",
+    "title": "The Man Who Saw Seconds",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1097,
+   "name": "You Can Thrive After Narcissistic Abuse - The #1 System for Recovering from Toxic Relationships.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Melanie Tonia Evans",
+    "title": "You Can Thrive After Narcissistic Abuse",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1098,
+   "name": "National Geographic Complete 2015 Original, Digital E-magazine Pack",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": null,
+   "resolution": "skipped_ambiguous"
+  },
+  {
+   "id": 1099,
+   "name": "Lev Grossman - The Magicians - www.myanonamouse.net",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Lev Grossman",
+    "title": "The Magicians",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1100,
+   "name": "Dungeon Crawler Carl 03 - The Dungeon Anarchist's Cookbook - Matt Dinniman.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Matt Dinniman",
+    "title": "The Dungeon Anarchist's Cookbook",
+    "series": "Dungeon Crawler Carl",
+    "series_seq": "3"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1101,
+   "name": "Maas, Sarah J. - [Throne of Glass 01] • Throne of Glass.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Sarah J. Maas",
+    "title": "Throne of Glass",
+    "series": "Throne of Glass",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override",
+   "note": "Live approval race: this ID had already been auto-approved with candidate_index=0 by the time this correction was submitted, so the correction never reached the server. That top-candidate match was wrong -- fixed separately via a new manual-import record on 2026-07-19."
+  },
+  {
+   "id": 1102,
+   "name": "The Three-Body Problem (The Three-Body Trilogy, Book 1) - Cixin Liu.azw3",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Cixin Liu",
+    "title": "The Three-Body Problem",
+    "series": "The Three-Body Trilogy",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1103,
+   "name": "The Girls Who Grew Big - Leila Mottley.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Leila Mottley",
+    "title": "The Girls Who Grew Big",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1106,
+   "name": "Arthur Clarke Almost Complete",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Arthur C. Clarke",
+    "title": "Arthur C. Clarke Collection",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1107,
+   "name": "William Gibson - The Peripheral - 9780698170704.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "William Gibson",
+    "title": "The Peripheral",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1108,
+   "name": "American Kingpin -Epic Hunt for the Criminal Mastermind Behind the Silk Road - Nick Bilton.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Nick Bilton",
+    "title": "American Kingpin",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1109,
+   "name": "The Mime Order - Author's preferred text - Samantha Shannon.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Samantha Shannon",
+    "title": "The Mime Order",
+    "series": "The Bone Season",
+    "series_seq": "2"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1110,
+   "name": "The Song Rising - Author's preferred text - Samantha Shannon.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Samantha Shannon",
+    "title": "The Song Rising",
+    "series": "The Bone Season",
+    "series_seq": "3"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1111,
+   "name": "A Wrinkle in Time Series",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Madeleine L'Engle",
+    "title": "A Wrinkle in Time",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1112,
+   "name": "Roadside Picnic - Arkady Strugatsky - trans Bormashenko .epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Arkady Strugatsky, Boris Strugatsky",
+    "title": "Roadside Picnic",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1113,
+   "name": "Absolution by Jeff VanderMeer.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Jeff VanderMeer",
+    "title": "Absolution",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1114,
+   "name": "Say You'll Remember Me - Abby Jimenez.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Abby Jimenez",
+    "title": "Say You'll Remember Me",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1116,
+   "name": "A Soul to Keep_ Duskwalker Brid - Opal Reyne.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Opal Reyne",
+    "title": "A Soul to Keep",
+    "series": "Duskwalker Brides",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1117,
+   "name": "Moonwalker Storybook.pdf",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Michael Jackson",
+    "title": "Moonwalker",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1118,
+   "name": "Harry Potter Series 1 to 7 - J.K. Rowling - epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "J.K. Rowling",
+    "title": "Harry Potter: The Complete Collection",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override",
+   "note": "Live approval race: this ID had already been auto-approved with candidate_index=0 by the time this correction was submitted, so the correction never reached the server. That top-candidate match was wrong -- fixed separately via a new manual-import record on 2026-07-19."
+  },
+  {
+   "id": 1119,
+   "name": "Burgess_ Anthony",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Andrew Biswell",
+    "title": "The real life of Anthony Burgess",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1120,
+   "name": "Too Much and Never Enough_ How - Mary L. Trump Ph.d_.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Mary L. Trump",
+    "title": "Too Much and Never Enough",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1121,
+   "name": "Sweet Berries - C.M. Nascota (Cambric Creek, Book 2).epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "C.M. Nascota",
+    "title": "Sweet Berries",
+    "series": "Cambric Creek",
+    "series_seq": "2"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1122,
+   "name": "Grandmaster of Demonic Cultivat V3 - Mo Xiang Tong Xiu.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Mo Xiang Tong Xiu",
+    "title": "Grandmaster of Demonic Cultivation",
+    "series": "",
+    "series_seq": "3"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1123,
+   "name": "Elden Ring The Road to the Erdtree, Vol. 2 (Elden Ring The Road to the Erdtree, 2) (Nikiichi Tobita, Philip Christie, John Neal etc.) .pdf",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Nikiichi Tobita, Inc FromSoftware, John Neal, Abigail Blackman",
+    "title": "Elden Ring",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "auto_approved_top_candidate"
+  },
+  {
+   "id": 1125,
+   "name": "Grandmaster of Demonic Cultivation - Mo Dao Zu Shi v01 [Seven Seas] [LuCaZ].epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Mo Xiang Tong Xiu",
+    "title": "Grandmaster of Demonic Cultivation",
+    "series": "Mo Dao Zu Shi",
+    "series_seq": "1"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1126,
+   "name": "The Complete Developer - No Starch Press - 2024.pdf",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": null,
+   "resolution": "skipped_ambiguous"
+  },
+  {
+   "id": 1127,
+   "name": "R. L. Stine - Goosebumps Series 1 - 62",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "R. L. Stine",
+    "title": "Goosebumps",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1128,
+   "name": "A Heart So Fierce and Broken (T - Brigid Kemmerer.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Brigid Kemmerer",
+    "title": "A Heart So Fierce and Broken",
+    "series": "Cursebreakers",
+    "series_seq": "2"
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 1130,
+   "name": "The Essential Jack Reacher 11-Book Bundle by Lee Child",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Lee Child",
+    "title": "The Essential Jack Reacher 11-Book Bundle",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "manual_override"
+  },
+  {
+   "id": 300,
+   "name": "Robin Hobb - Assassin's Apprentice",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Robin Hobb",
+    "title": "Assassin's Apprentice",
+    "series": "Farseer Trilogy",
+    "series_seq": "1"
+   },
+   "resolution": "known_false_positive_trap",
+   "note": "Live matcher wrongly resolved this to author='Robin Hobb' title=\"Assassin's Fate\" (conf=0.87) -- must not repeat."
+  },
+  {
+   "id": 370,
+   "name": "1 - Assassin's Apprentice",
+   "category": "audiobook",
+   "is_comic": false,
+   "expected": {
+    "author": "Robin Hobb",
+    "title": "Assassin's Apprentice",
+    "series": "Farseer Trilogy",
+    "series_seq": "1"
+   },
+   "resolution": "known_false_positive_trap",
+   "note": "Live matcher wrongly resolved this to author='Robin Hobb' title=\"Assassin's Fate\" (conf=0.87) -- must not repeat."
+  },
+  {
+   "id": 884,
+   "name": "stamped_from_the_beginning_kendi_ibram_x_.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Ibram X. Kendi",
+    "title": "Stamped from the Beginning",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "known_false_positive_trap",
+   "note": "Live matcher wrongly resolved this to author='Irb Media' title=\"Summary of Ibram X. Kendi's Stamped from the Beginning\" (conf=0.889) -- must not repeat."
+  },
+  {
+   "id": 1072,
+   "name": "Surrounded by Psychopaths - Thomas Erikson.epub",
+   "category": "ebook",
+   "is_comic": false,
+   "expected": {
+    "author": "Thomas Erikson",
+    "title": "Surrounded by Psychopaths",
+    "series": "",
+    "series_seq": ""
+   },
+   "resolution": "known_false_positive_trap",
+   "note": "Live matcher wrongly resolved this to author='Irb Media' title=\"Summary of Thomas Erikson's Surrounded by Psychopaths\" (conf=0.86) -- must not repeat."
+  }
+ ]
+}

@@ -102,7 +102,7 @@ def _extract_isbn_from_opf(opf_bytes: bytes) -> str | None:
             candidate = re.sub(r"[^0-9Xx]", "", el.text.replace("urn:isbn:", ""))
             if len(candidate) == 13 and isbn13_checksum_valid(candidate):
                 return candidate
-            if len(candidate) == 10:
+            if ISBN10_RE.fullmatch(candidate):
                 isbn13 = _isbn10_to_isbn13(candidate)
                 if isbn13:
                     return isbn13
@@ -121,7 +121,7 @@ def _extract_isbn_from_opf(opf_bytes: bytes) -> str | None:
         if not el.text:
             continue
         text = re.sub(r"[^0-9Xx]", "", el.text)
-        if len(text) == 10:
+        if ISBN10_RE.fullmatch(text):
             isbn13 = _isbn10_to_isbn13(text)
             if isbn13:
                 return isbn13

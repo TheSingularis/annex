@@ -27,6 +27,7 @@ export interface Candidate {
   series_seq: string;
   score: number;
   source: string;
+  match_method: string;
 }
 
 const BASE = "/api";

@@ -4,6 +4,8 @@ import requests
 from thefuzz import fuzz
 from flask import current_app
 
+from app.matching import scoring
+
 
 # --- Filename cleaning patterns ---
 
@@ -279,8 +281,14 @@ def _score(candidate: dict, parsed: dict) -> float:
 
 # --- Search + score helpers ---
 
-def _search_and_score(author: str, title: str, category: str, is_comic: bool = False) -> list:
-    """Run the appropriate API search and return scored candidates, best first."""
+def _search_and_score(
+    author: str, title: str, category: str, is_comic: bool = False, match_method: str = "primary"
+) -> list:
+    """Run the appropriate API search and return scored candidates, best first.
+
+    match_method: provenance tag recording which resolve_metadata cascade
+    branch produced this candidate list (e.g. "primary", "flipped",
+    "subtitle_trimmed") -- carried through to the UI for debugging."""
     query = f"{author} {title}".strip()
     parsed = {"author": author, "title": title}
 
@@ -305,7 +313,7 @@ def _search_and_score(author: str, title: str, category: str, is_comic: bool = F
         return []
 
     return sorted(
-        [{"score": _score(c, parsed), **c} for c in candidates],
+        [{"score": _score(c, parsed), "match_method": match_method, **c} for c in candidates],
         key=lambda x: x["score"],
         reverse=True,
     )
@@ -560,7 +568,9 @@ def resolve_metadata(
 
     threshold = current_app.config["CONFIDENCE_THRESHOLD"]
 
-    scored = _search_and_score(parsed["author"], parsed["title"], category, is_comic=is_comic)
+    scored = _search_and_score(
+        parsed["author"], parsed["title"], category, is_comic=is_comic, match_method="primary"
+    )
     confident = bool(scored) and scored[0]["score"] >= threshold
 
     # The author/title-flip and subtitle-trim retries below assume prose
@@ -575,7 +585,7 @@ def resolve_metadata(
         # confident match -- these extra API calls (and their fallback cascades)
         # add up across a large backlog and are wasted once we know the answer.
         if not confident and parsed["author"] and parsed["title"]:
-            flipped = _search_and_score(parsed["title"], parsed["author"], category)
+            flipped = _search_and_score(parsed["title"], parsed["author"], category, match_method="flipped")
             if flipped and (not scored or flipped[0]["score"] > scored[0]["score"]):
                 scored = flipped
             confident = bool(scored) and scored[0]["score"] >= threshold
@@ -587,7 +597,7 @@ def resolve_metadata(
         # title too and keep whichever interpretation scores higher.
         main_title = re.split(r"[:;]", parsed["title"], maxsplit=1)[0].strip()
         if not confident and main_title and main_title != parsed["title"]:
-            trimmed = _search_and_score(parsed["author"], main_title, category)
+            trimmed = _search_and_score(parsed["author"], main_title, category, match_method="subtitle_trimmed")
             if trimmed and (not scored or trimmed[0]["score"] > scored[0]["score"]):
                 scored = trimmed
             confident = bool(scored) and scored[0]["score"] >= threshold
@@ -602,13 +612,23 @@ def resolve_metadata(
         if not confident and parsed["author"] and scored:
             whole_title = f"{parsed['author']} {parsed['title']}".strip()
             as_whole = sorted(
-                [{**c, "score": _score(c, {"author": "", "title": whole_title})} for c in scored],
+                [
+                    {**c, "score": _score(c, {"author": "", "title": whole_title}), "match_method": "whole_title"}
+                    for c in scored
+                ],
                 key=lambda x: x["score"],
                 reverse=True,
             )
             if as_whole and as_whole[0]["score"] > scored[0]["score"]:
                 scored = as_whole
 
+    if not scored:
+        return {"confidence": 0.0, "match": None, "candidates": []}
+
+    # Hard-disqualify summary-mill matches and series_seq conflicts BEFORE the
+    # fill-in blocks below, which would otherwise paper over a real candidate/
+    # filename disagreement by borrowing the filename's own series_seq value.
+    scored = scoring.filter_candidates(scored, parsed)
     if not scored:
         return {"confidence": 0.0, "match": None, "candidates": []}
 

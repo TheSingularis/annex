@@ -168,6 +168,91 @@ def test_score_does_not_penalize_extra_author_credits():
     assert metadata._score(candidate, parsed) >= 0.85
 
 
+# --- hard disqualification: summary-mill matches, series_seq conflicts (Phase 3) ---
+# Unit tests for app.matching.scoring live in tests/matching/test_scoring.py. These
+# integration tests prove the wiring point in resolve_metadata actually intercepts a
+# HIGH-scoring wrong candidate -- monkeypatching _search_and_score with a pre-scored,
+# above-threshold candidate makes that deterministic rather than depending on fuzzy
+# string scoring happening to land above CONFIDENCE_THRESHOLD, which real-world
+# summary-mill/wrong-installment candidates don't always do on title/author alone.
+
+def test_series_seq_conflict_disqualifies_high_scoring_candidate(app, monkeypatch):
+    # Regression: "Zodiac Academy 06" filenames were matching Audible's
+    # "Zodiac Academy 8" because series-name word overlap dominated the
+    # score. Even a candidate that scores WELL above threshold must be
+    # hard-disqualified if its own series_seq ("8") disagrees with the
+    # filename's parsed series_seq ("06").
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+        return [{
+            "score": 0.95, "match_method": match_method,
+            "title": "Zodiac Academy 8", "author": "Caroline Peckham, Susanne Valenti",
+            "series": "Zodiac Academy", "series_seq": "8", "source": "audible",
+        }]
+
+    monkeypatch.setattr(metadata, "_search_and_score", fake_search_and_score)
+
+    result = metadata.resolve_metadata(
+        "Caroline Peckham, Susanne Valenti - Zodiac Academy 06 - Fated Throne", "audiobook"
+    )
+
+    assert result["match"] is None
+    assert result["candidates"] == []
+
+
+def test_summary_mill_title_pattern_disqualified_even_high_scoring(app, monkeypatch):
+    # Regression: study-guide products titled "Summary of X" beat the real
+    # book because the real title is a literal word-subset of theirs --
+    # that means they can genuinely outscore the real book, not just tie.
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+        return [{
+            "score": 0.97, "match_method": match_method,
+            "title": "Summary of Atomic Habits by James Clear", "author": "Some Publisher",
+            "series": "", "series_seq": "", "source": "openlibrary",
+        }]
+
+    monkeypatch.setattr(metadata, "_search_and_score", fake_search_and_score)
+
+    result = metadata.resolve_metadata("Atomic Habits - James Clear", "ebook")
+
+    assert result["match"] is None
+    assert result["candidates"] == []
+
+
+def test_summary_mill_publisher_disqualified_multi_contributor_author(app, monkeypatch):
+    # Author strings are comma-joined multi-contributor lists (e.g. "IRB
+    # Media, LLC"), not exact matches to the blocklist entry -- must match
+    # per comma-segment, not the whole string.
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+        return [{
+            "score": 0.92, "match_method": match_method,
+            "title": "Surrounded by Psychopaths", "author": "IRB Media, LLC",
+            "series": "", "series_seq": "", "source": "openlibrary",
+        }]
+
+    monkeypatch.setattr(metadata, "_search_and_score", fake_search_and_score)
+
+    result = metadata.resolve_metadata("Surrounded by Psychopaths - Thomas Erikson", "ebook")
+
+    assert result["match"] is None
+    assert result["candidates"] == []
+
+
+def test_filter_candidates_empty_result_does_not_crash(app, monkeypatch):
+    # Direct coverage of the IndexError risk: filtering every candidate out
+    # must fall through to the standard empty-result shape, not raise.
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+        return [
+            {"score": 0.9, "match_method": match_method, "title": "Summary of X", "author": "Wizer", "series": "", "series_seq": "", "source": "openlibrary"},
+            {"score": 0.88, "match_method": match_method, "title": "Study Guide to X", "author": "Bookhabits", "series": "", "series_seq": "", "source": "openlibrary"},
+        ]
+
+    monkeypatch.setattr(metadata, "_search_and_score", fake_search_and_score)
+
+    result = metadata.resolve_metadata("X - Some Author", "ebook")
+
+    assert result == {"confidence": 0.0, "match": None, "candidates": []}
+
+
 # --- ISBN surfaced from already-fetched provider responses (Phase 1.5) ---
 
 def test_search_openlibrary_extracts_isbn(app, http_mock):
@@ -296,7 +381,7 @@ def test_below_threshold_yields_no_match_but_keeps_candidates(app, http_mock):
 def test_comic_low_confidence_only_searches_once(app, monkeypatch):
     calls = []
 
-    def fake_search_and_score(author, title, category, is_comic=False):
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
         calls.append((author, title, is_comic))
         return []
 
@@ -323,6 +408,7 @@ def test_prose_low_confidence_retries_whole_title_when_split_guess_is_wrong(app,
 
     assert result["match"] is not None
     assert result["match"]["author"] == "Mo Xiang Tong Xiu"
+    assert result["match"]["match_method"] == "whole_title"
 
 
 def test_resolve_metadata_fills_series_from_filename(app, http_mock):
@@ -345,7 +431,7 @@ def test_resolve_metadata_fills_series_from_filename(app, http_mock):
 def test_prose_low_confidence_retries_flip_and_subtitle_trim(app, monkeypatch):
     calls = []
 
-    def fake_search_and_score(author, title, category, is_comic=False):
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
         calls.append((author, title))
         return []
 

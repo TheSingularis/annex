@@ -145,6 +145,7 @@ export default function Review() {
                   >
                     <strong>{c.title}</strong> — {c.author}
                     {c.series && <span style={{ color: tokens.textMuted }}> ({c.series} #{c.series_seq})</span>}
+                    <span style={{ color: tokens.textMuted, fontSize: 11, marginLeft: 6 }}>[{c.source}/{c.match_method}]</span>
                     <span style={{ float: "right", color: tokens.textMuted }}>{Math.round(c.score * 100)}%</span>
                   </div>
                 ))}

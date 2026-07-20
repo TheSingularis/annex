@@ -313,6 +313,25 @@ def _search_and_score(author: str, title: str, category: str, is_comic: bool = F
 
 # --- Metadata API clients ---
 
+def audible_product_to_candidate(product: dict) -> dict:
+    """Map a raw Audible catalog product to our candidate dict shape.
+    Shared between _search_audible and app.matching.resolution's by-ASIN
+    lookup, which hits a different endpoint but gets the same product shape
+    back."""
+    authors = [a["name"] for a in product.get("authors", []) if a.get("name")]
+    series_list = product.get("series", [])
+    series = series_list[0].get("title", "") if series_list else ""
+    series_seq = series_list[0].get("sequence", "") if series_list else ""
+    return {
+        "title": product.get("title", ""),
+        "author": ", ".join(authors),
+        "series": series,
+        "series_seq": series_seq,
+        "source": "audible",
+        "raw": product,
+    }
+
+
 def _search_audible(query: str) -> list:
     try:
         resp = requests.get(
@@ -327,21 +346,7 @@ def _search_audible(query: str) -> list:
         )
         resp.raise_for_status()
         data = resp.json()
-        results = []
-        for product in data.get("products", [])[:5]:
-            authors = [a["name"] for a in product.get("authors", []) if a.get("name")]
-            series_list = product.get("series", [])
-            series = series_list[0].get("title", "") if series_list else ""
-            series_seq = series_list[0].get("sequence", "") if series_list else ""
-            results.append({
-                "title": product.get("title", ""),
-                "author": ", ".join(authors),
-                "series": series,
-                "series_seq": series_seq,
-                "source": "audible",
-                "raw": product,
-            })
-        return results
+        return [audible_product_to_candidate(p) for p in data.get("products", [])[:5]]
     except Exception as e:
         current_app.logger.warning(f"Audible search failed: {e}")
         return []

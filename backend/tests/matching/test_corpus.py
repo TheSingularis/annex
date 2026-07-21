@@ -17,14 +17,17 @@ from app.matching import extraction
 
 FIXTURE_PATH = Path(__file__).parent.parent / "fixtures" / "corpus.json"
 
-# Measured against this branch's app.metadata (which already includes the
-# two series-detection bugfixes from fix/series-detection-followups) via
-# test_current_extraction_baseline_accuracy below: 29/213 and 14/213 scored
-# corpus entries respectively. Exact fractions, not rounded decimals, so a
-# byte-for-byte-identical port doesn't spuriously fail this gate. The new
-# app.matching.extraction module (Phase 1) must meet or beat both.
-BASELINE_TITLE_AUTHOR_RATE = 29 / 213
-BASELINE_ALL_FIELDS_RATE = 14 / 213
+# Measured against this branch's app.metadata via
+# test_current_extraction_baseline_accuracy below: 34/213 and 16/213 scored
+# corpus entries respectively (bumped from 29/213 and 14/213 by the
+# multi-segment noise/identifier-segment fix -- both app.metadata and
+# app.matching.extraction got the identical fix, kept in sync, so this
+# ratchets up rather than needing a gap). Exact fractions, not rounded
+# decimals, so a byte-for-byte-identical port doesn't spuriously fail this
+# gate. The new app.matching.extraction module (Phase 1) must meet or beat
+# both.
+BASELINE_TITLE_AUTHOR_RATE = 34 / 213
+BASELINE_ALL_FIELDS_RATE = 16 / 213
 
 
 def _load_corpus():

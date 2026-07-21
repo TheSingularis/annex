@@ -128,6 +128,40 @@ def test_extract_prose_no_false_positive_series_title():
     assert result.title == "Fahrenheit 451"
 
 
+# --- 3-segment noise/identifier dropping (mirrors app.metadata, kept in
+# sync so Phase 4a's shadow resolver doesn't disagree with the live one
+# over this fix alone) ---
+
+@pytest.mark.parametrize("name,expected_author,expected_title", [
+    ("The Mask Falling - Author's preferred text - Samantha Shannon.epub", "Samantha Shannon", "The Mask Falling"),
+    ("The Mime Order - Author's preferred text - Samantha Shannon.epub", "Samantha Shannon", "The Mime Order"),
+    ("William Gibson - The Peripheral - 9780698170704.epub", "William Gibson", "The Peripheral"),
+])
+def test_extract_prose_drops_noise_segment(name, expected_author, expected_title):
+    result = extraction.extract_prose(name)
+    assert result.author == expected_author
+    assert result.title == expected_title
+
+
+def test_extract_prose_noise_check_does_not_fire_outside_3_segments():
+    result = extraction.extract_prose("Author - Series 01 - Title - trans Someone.epub")
+    assert result.series == "Series"
+    assert result.series_seq == "01"
+
+
+def test_extract_prose_noise_check_still_wrong_for_known_open_gaps():
+    # Same known, separately-logged limitations as app.metadata -- see
+    # test_metadata.py's equivalent test and the matcher-rebuild roadmap
+    # backlog for why these are open, not fixed here.
+    result = extraction.extract_prose("Roadside Picnic - Arkady Strugatsky - trans Bormashenko.epub")
+    assert result.author == "Roadside Picnic"
+    assert result.title == "Arkady Strugatsky"
+
+    result = extraction.extract_prose("Homer - The Odyssey - read by Ian McKellen")
+    assert result.author == "The Odyssey"
+    assert result.title == "Homer"
+
+
 # --- extract_comic ---
 
 @pytest.mark.parametrize("name,expected_title,expected_seq", [
@@ -153,6 +187,8 @@ def test_extract_merges_isbn_when_present():
     )
     assert result.isbn == "9780061741241"
     assert result.author == "Paulo Coelho"
+    # The bare-digit trailing segment must not also leak into the title.
+    assert result.title == "The Alchemist"
 
 
 def test_extract_no_isbn_leaves_field_none():

@@ -61,6 +61,34 @@ _BOOK_MARKER_RE = re.compile(
 # release-name convention for a series entry.
 _SEGMENT_SERIES_RE = re.compile(r"^(?P<series>.+?)\s+(?P<seq>\d{1,3}(?:\.\d+)?)$")
 
+# Segments that are noise, not title/author content, when they show up as the
+# middle or trailing segment of an otherwise-unresolved 3-way dash split (e.g.
+# "The Mask Falling - Author's preferred text - Samantha Shannon", "Roadside
+# Picnic - Arkady Strugatsky - trans Bormashenko"). Curated from real
+# needs_review filenames (2026-07-21) -- expected to need extending over
+# time, same as the Phase 3 summary-mill blocklist.
+_CREDIT_MARKER_RE = re.compile(
+    r"^(?:trans(?:lated\s+by)?|read\s+by|narrated\s+by)\s+.+$", re.IGNORECASE
+)
+_NOISE_PHRASE_RE = re.compile(
+    r"^(?:author'?s\s+preferred\s+text|corrected|unabridged|abridged)$", re.IGNORECASE
+)
+# ISBN-10/13-shaped bare digit run left over after a filename tacks on an
+# identifier as its own dash segment. This doesn't extract or use the ISBN
+# (that's app.matching.identifiers's job, not yet wired into this parser) --
+# it only keeps the digits from being merged into the title/author text.
+_IDENTIFIER_SEGMENT_RE = re.compile(r"^\d{9,13}(?:\.[A-Za-z0-9]{2,4})?$")
+
+
+def _is_noise_segment(segment: str) -> bool:
+    segment = segment.strip()
+    return bool(
+        _CREDIT_MARKER_RE.match(segment)
+        or _NOISE_PHRASE_RE.match(segment)
+        or _IDENTIFIER_SEGMENT_RE.match(segment)
+    )
+
+
 # Common Audible-style naming with no dash at all: "Title: Series, Book N"
 # (e.g. "Heir of Fire: Throne of Glass, Book 3"). No author in this
 # convention -- it comes from file tags instead, via resolve_metadata's
@@ -189,9 +217,28 @@ def parse_torrent_name(name: str) -> dict:
             else:
                 result = {"author": "", "title": _clean_title(segments[0])}
         else:
-            parts = cleaned.split(" - ", 1)
-            left = _clean_title(parts[0])
-            right = _clean_title(parts[1])
+            # A 3-way split where no series segment was found: check whether
+            # the middle or trailing segment is noise (an edition/contributor
+            # note, or a bare identifier) rather than real title/author
+            # content, before falling back to the naive first-dash split
+            # (which would otherwise merge that noise into the title/author
+            # text -- e.g. "The Mask Falling - Author's preferred text -
+            # Samantha Shannon" naively splitting into author="The Mask
+            # Falling", title="Author's preferred text Samantha Shannon").
+            noisy_idx = None
+            if len(segments) == 3:
+                candidates = [i for i in (1, 2) if _is_noise_segment(segments[i])]
+                if len(candidates) == 1:
+                    noisy_idx = candidates[0]
+
+            if noisy_idx is not None:
+                remaining = [segments[i] for i in range(3) if i != noisy_idx]
+                left = _clean_title(remaining[0])
+                right = _clean_title(remaining[1])
+            else:
+                parts = cleaned.split(" - ", 1)
+                left = _clean_title(parts[0])
+                right = _clean_title(parts[1])
             result = _assign_author_title(left, right)
 
         result["series"] = series

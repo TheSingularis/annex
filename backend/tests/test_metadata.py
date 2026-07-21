@@ -143,6 +143,54 @@ def test_parse_torrent_name_no_false_positive_series_title():
     assert result["title"] == "Fahrenheit 451"
 
 
+# --- 3-segment noise/identifier dropping ---
+
+@pytest.mark.parametrize("name,expected_author,expected_title", [
+    # Real recurring release convention: "Title - Author's preferred text -
+    # Author" -- the middle segment is an edition note, not content.
+    ("The Mask Falling - Author's preferred text - Samantha Shannon.epub", "Samantha Shannon", "The Mask Falling"),
+    ("The Mime Order - Author's preferred text - Samantha Shannon.epub", "Samantha Shannon", "The Mime Order"),
+    # Trailing segment is a bare ISBN-shaped digit run -- must be dropped,
+    # not merged into the title.
+    ("William Gibson - The Peripheral - 9780698170704.epub", "William Gibson", "The Peripheral"),
+])
+def test_parse_torrent_name_drops_noise_segment(name, expected_author, expected_title):
+    result = metadata.parse_torrent_name(name)
+    assert result["author"] == expected_author
+    assert result["title"] == expected_title
+
+
+def test_parse_torrent_name_noise_check_does_not_fire_outside_3_segments():
+    # A 4-segment filename containing a segment that *would* match the noise
+    # patterns must be left alone -- scope is exactly 3 segments, no
+    # regression risk for longer splits.
+    result = metadata.parse_torrent_name("Author - Series 01 - Title - trans Someone.epub")
+    # Unaffected either way: the series-segment check already consumes
+    # "Series 01" here, so this exercises the series_from_segment branch,
+    # not our new noise-drop check -- confirms the two don't interact badly.
+    assert result["series"] == "Series"
+    assert result["series_seq"] == "01"
+
+
+def test_parse_torrent_name_noise_check_still_wrong_for_known_open_gaps():
+    # Known, separately-logged limitations this fix doesn't address --
+    # documents current behavior so a future change to these doesn't
+    # silently regress without anyone noticing. See the matcher-rebuild
+    # roadmap backlog for why these are open, not fixed here.
+    #
+    # Tie-break coin-flip (verified against the real corpus: flipping the
+    # default isn't a real improvement either) -- author/title still swapped.
+    result = metadata.parse_torrent_name("Roadside Picnic - Arkady Strugatsky - trans Bormashenko.epub")
+    assert result["author"] == "Roadside Picnic"
+    assert result["title"] == "Arkady Strugatsky"
+
+    # Mononym-author bug in _assign_author_title's single-word special case
+    # (pre-existing, not specific to the 3-segment problem).
+    result = metadata.parse_torrent_name("Homer - The Odyssey - read by Ian McKellen")
+    assert result["author"] == "The Odyssey"
+    assert result["title"] == "Homer"
+
+
 # --- parse_comic_name (comics/manga) ---
 
 @pytest.mark.parametrize("name,expected_title,expected_seq", [

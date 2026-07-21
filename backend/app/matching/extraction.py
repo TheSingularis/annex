@@ -37,6 +37,30 @@ _BOOK_MARKER_RE = re.compile(
     r"^(?P<series>.+?),?\s+book\s+(?P<seq>\d+(?:\.\d+)?)$", re.IGNORECASE
 )
 _SEGMENT_SERIES_RE = re.compile(r"^(?P<series>.+?)\s+(?P<seq>\d{1,3}(?:\.\d+)?)$")
+
+# Segments that are noise, not title/author content, when they show up as the
+# middle or trailing segment of an otherwise-unresolved 3-way dash split.
+# Mirrors app.metadata's identical constants -- kept in sync deliberately so
+# Phase 4a's shadow resolver (app.matching.orchestrator, which calls this
+# module) doesn't disagree with the live resolver over this fix alone.
+_CREDIT_MARKER_RE = re.compile(
+    r"^(?:trans(?:lated\s+by)?|read\s+by|narrated\s+by)\s+.+$", re.IGNORECASE
+)
+_NOISE_PHRASE_RE = re.compile(
+    r"^(?:author'?s\s+preferred\s+text|corrected|unabridged|abridged)$", re.IGNORECASE
+)
+_IDENTIFIER_SEGMENT_RE = re.compile(r"^\d{9,13}(?:\.[A-Za-z0-9]{2,4})?$")
+
+
+def _is_noise_segment(segment: str) -> bool:
+    segment = segment.strip()
+    return bool(
+        _CREDIT_MARKER_RE.match(segment)
+        or _NOISE_PHRASE_RE.match(segment)
+        or _IDENTIFIER_SEGMENT_RE.match(segment)
+    )
+
+
 _COLON_SERIES_RE = re.compile(
     r"^(?P<title>.+?):\s*(?P<series>.+?),?\s+book\s+(?P<seq>\d+(?:\.\d+)?)"
     r"(?:\.[A-Za-z0-9]{2,4})?\s*$",
@@ -191,10 +215,26 @@ def _split_author_title(cleaned: str, series: str, series_seq: str) -> Extracted
             else:
                 author, title = "", _clean_title(segments[0])
         else:
-            parts = cleaned.split(" - ", 1)
-            author, title = _assign_author_title(
-                _clean_title(parts[0]), _clean_title(parts[1])
-            )
+            # A 3-way split where no series segment was found: check whether
+            # the middle or trailing segment is noise (an edition/contributor
+            # note, or a bare identifier) rather than real title/author
+            # content, before falling back to the naive first-dash split.
+            noisy_idx = None
+            if len(segments) == 3:
+                candidates = [i for i in (1, 2) if _is_noise_segment(segments[i])]
+                if len(candidates) == 1:
+                    noisy_idx = candidates[0]
+
+            if noisy_idx is not None:
+                remaining_segs = [segments[i] for i in range(3) if i != noisy_idx]
+                author, title = _assign_author_title(
+                    _clean_title(remaining_segs[0]), _clean_title(remaining_segs[1])
+                )
+            else:
+                parts = cleaned.split(" - ", 1)
+                author, title = _assign_author_title(
+                    _clean_title(parts[0]), _clean_title(parts[1])
+                )
 
         return ExtractedName(author=author, title=title, series=series, series_seq=series_seq)
 

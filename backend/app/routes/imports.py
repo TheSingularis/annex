@@ -201,5 +201,11 @@ def reset_import(import_id):
     record.resolved_series = None
     record.resolved_series_seq = None
     record.target_path = None
+    # Clear the stale confident score/candidates too -- otherwise a record
+    # read between reset and its next retry completing briefly shows the
+    # old (wrong) confidence value, which looked like a live inconsistency
+    # bug during triage but was just this leftover field.
+    record.metadata_confidence = None
+    record.candidates_json = None
     db.session.commit()
     return jsonify(record.to_dict())

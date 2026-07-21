@@ -61,8 +61,15 @@ def _is_noise_segment(segment: str) -> bool:
     )
 
 
+# Separator is ':' or a single '_' -- downloaders that can't put a literal
+# ':' in a filename (Windows-illegal) sometimes substitute '_' instead of
+# one of the unicode lookalikes _COLON_SUBSTITUTES already handles. Mirrors
+# app.metadata's identical fix (kept in sync for Phase 4a's shadow
+# comparison) -- scoped to this regex only, not added to _COLON_SUBSTITUTES's
+# blanket string-wide replacement, since '_' is already overloaded as a
+# generic word-separator elsewhere ("Author_-_Title").
 _COLON_SERIES_RE = re.compile(
-    r"^(?P<title>.+?):\s*(?P<series>.+?),?\s+book\s+(?P<seq>\d+(?:\.\d+)?)"
+    r"^(?P<title>.+?)[_:]\s*(?P<series>.+?),?\s+book\s+(?P<seq>\d+(?:\.\d+)?)"
     r"(?:\.[A-Za-z0-9]{2,4})?\s*$",
     re.IGNORECASE,
 )

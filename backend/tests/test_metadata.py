@@ -101,6 +101,28 @@ def test_parse_torrent_name_series_normalizes_fake_colon():
     assert result["series"] == "Throne of Glass"
 
 
+def test_parse_torrent_name_accepts_underscore_as_colon_substitute():
+    # Real example: "Moss'd in Space_  Moss'd in Space, Book 1.m4b" -- the
+    # real title is "Moss'd in Space: Moss'd in Space, Book 1", but whatever
+    # stripped the filesystem-illegal ':' substituted a plain '_' instead of
+    # one of the unicode lookalikes the fake-colon case above already
+    # handles.
+    result = metadata.parse_torrent_name("Moss'd in Space_  Moss'd in Space, Book 1.m4b")
+    assert result["title"] == "Moss'd in Space"
+    assert result["series"] == "Moss'd in Space"
+    assert result["series_seq"] == "1"
+
+
+def test_parse_torrent_name_underscore_word_separator_still_works():
+    # '_' is also a plain word-separator convention ("Author_-_Title") --
+    # widening the colon-series regex to accept '_' must not break that,
+    # since this filename has no ", Book N" tail for the colon-series regex
+    # to latch onto in the first place.
+    result = metadata.parse_torrent_name("Frank_Herbert_-_Dune.epub")
+    assert result["author"] == "Frank Herbert"
+    assert result["title"] == "Dune"
+
+
 @pytest.mark.parametrize("name", [
     # A title with a number in it must not be misread as "series N" --
     # only a 3+ segment split (a real author segment present) is safe to
@@ -272,6 +294,37 @@ def test_search_openlibrary_no_isbn_present(app, http_mock):
     assert results[0]["isbn"] == ""
 
 
+# --- query sanitization (real bug: OpenLibrary returns zero results for a
+# combined author+title query containing an apostrophe, even though the
+# same book is found instantly by a title-only query or the same combined
+# query with the apostrophe stripped) ---
+
+def test_sanitize_query_strips_straight_and_curly_apostrophes():
+    assert metadata._sanitize_query("Rebecca Thorne Moss'd in Space") == "Rebecca Thorne Mossd in Space"
+    assert metadata._sanitize_query("Moss’d in Space") == "Mossd in Space"
+
+
+def test_search_openlibrary_sends_sanitized_query(app, monkeypatch):
+    captured = {}
+
+    class _FakeResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"docs": []}
+
+    def fake_get(url, params=None, **kwargs):
+        captured["q"] = params.get("q") if params else None
+        return _FakeResp()
+
+    monkeypatch.setattr(metadata.requests, "get", fake_get)
+
+    metadata._search_openlibrary("Rebecca Thorne Moss'd in Space")
+
+    assert captured["q"] == "Rebecca Thorne Mossd in Space"
+
+
 def test_search_googlebooks_extracts_isbn(app, http_mock):
     http_mock.on_get("googleapis.com/books", {
         "items": [{"volumeInfo": {
@@ -438,8 +491,46 @@ def test_prose_low_confidence_retries_flip_and_subtitle_trim(app, monkeypatch):
     monkeypatch.setattr(metadata, "_search_and_score", fake_search_and_score)
 
     # " - " split gives a non-empty author and title, and the colon gives a
-    # trimmable main_title -- both retry branches should fire when unconfident.
+    # trimmable main_title -- both retry branches should fire when unconfident,
+    # plus the title_only fallback since every attempt here comes back empty.
     result = metadata.resolve_metadata("Some Title: A Subtitle - Some Author", "ebook")
 
     assert result["match"] is None
-    assert len(calls) == 3
+    assert len(calls) == 4
+    assert calls[3] == ("", "Some Title: A Subtitle")
+
+
+def test_title_only_retry_finds_a_match_when_combined_query_finds_nothing(app, monkeypatch):
+    # Simulates the real bug class this retry backstops: every combined
+    # author+title query (primary, flipped, subtitle-trimmed) comes back
+    # completely empty, but a title-only query would have found the book.
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+        if author == "" and title == "Moss'd in Space":
+            return [{"score": 0.95, "match_method": match_method, "title": "Moss'd in Space",
+                      "author": "Rebecca Thorne", "series": "", "series_seq": "", "source": "itunes"}]
+        return []
+
+    monkeypatch.setattr(metadata, "_search_and_score", fake_search_and_score)
+
+    result = metadata.resolve_metadata("Moss'd in Space - Rebecca Thorne", "ebook")
+
+    assert result["match"] is not None
+    assert result["match"]["match_method"] == "title_only"
+    assert result["match"]["author"] == "Rebecca Thorne"
+
+
+def test_title_only_retry_skipped_when_primary_already_has_candidates(app, monkeypatch):
+    # Must not fire (and spend an extra API call) once there's anything to
+    # work with -- only a fully empty result set should trigger it.
+    calls = []
+
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+        calls.append((author, title))
+        return [{"score": 0.3, "match_method": match_method, "title": "Something Else",
+                  "author": "Someone Else", "series": "", "series_seq": "", "source": "openlibrary"}]
+
+    monkeypatch.setattr(metadata, "_search_and_score", fake_search_and_score)
+
+    metadata.resolve_metadata("Some Title - Some Author", "ebook")
+
+    assert ("", "Some Title") not in calls

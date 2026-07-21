@@ -30,6 +30,21 @@ _EDITION_RE = re.compile(
     re.IGNORECASE,
 )
 
+# OpenLibrary's search.json returns zero results for some otherwise-findable
+# combined author+title queries when the query contains a straight or curly
+# apostrophe -- verified empirically against a real title ("Moss'd in
+# Space" by Rebecca Thorne): the title-only query "Moss'd in Space" finds it
+# fine, but the combined query "Rebecca Thorne Moss'd in Space" (what
+# _search_and_score actually sends) returns nothing, while the same combined
+# query with the apostrophe stripped ("Rebecca Thorne Mossd in Space")
+# matches instantly. Scoped to the query string sent over the wire only --
+# the parsed title used for scoring keeps the apostrophe untouched.
+_QUERY_APOSTROPHE_RE = re.compile(r"[‘’']")
+
+
+def _sanitize_query(query: str) -> str:
+    return _QUERY_APOSTROPHE_RE.sub("", query)
+
 # Release groups sometimes swap ':' for a lookalike character to dodge
 # filesystem restrictions (e.g. "Heir of Fire꞉ Throne of Glass, Book 3").
 # Normalize those back to a real colon so downstream colon-based logic
@@ -50,8 +65,18 @@ _SEGMENT_SERIES_RE = re.compile(r"^(?P<series>.+?)\s+(?P<seq>\d{1,3}(?:\.\d+)?)$
 # (e.g. "Heir of Fire: Throne of Glass, Book 3"). No author in this
 # convention -- it comes from file tags instead, via resolve_metadata's
 # hint_author.
+#
+# Separator is ':' or a single '_' -- downloaders that can't put a literal
+# ':' in a filename (Windows-illegal) sometimes substitute '_' instead of
+# one of the unicode lookalikes _COLON_SUBSTITUTES already handles (verified
+# real example: "Moss'd in Space_  Moss'd in Space, Book 1.m4b", the real
+# title being "Moss'd in Space: Moss'd in Space, Book 1"). Scoped to this
+# regex only, not added to _COLON_SUBSTITUTES's blanket string-wide
+# replacement -- '_' is already overloaded as a generic word-separator
+# elsewhere (the "Author_-_Title" convention), so a global substitution
+# would corrupt those cases instead.
 _COLON_SERIES_RE = re.compile(
-    r"^(?P<title>.+?):\s*(?P<series>.+?),?\s+book\s+(?P<seq>\d+(?:\.\d+)?)"
+    r"^(?P<title>.+?)[_:]\s*(?P<series>.+?),?\s+book\s+(?P<seq>\d+(?:\.\d+)?)"
     r"(?:\.[A-Za-z0-9]{2,4})?\s*$",
     re.IGNORECASE,
 )
@@ -406,7 +431,7 @@ def _search_openlibrary(query: str) -> list:
             # of popular books under study guides, summaries, and translations
             # (e.g. "The Alchemist" itself doesn't appear until position 9-11).
             # Fetch a wider pool and let our own fuzzy scoring pick the best one.
-            params={"q": query, "limit": 20},
+            params={"q": _sanitize_query(query), "limit": 20},
             timeout=10,
         )
         resp.raise_for_status()
@@ -610,6 +635,20 @@ def _resolve_from_parsed(parsed: dict, category: str, is_comic: bool) -> dict:
             if trimmed and (not scored or trimmed[0]["score"] > scored[0]["score"]):
                 scored = trimmed
             confident = bool(scored) and scored[0]["score"] >= threshold
+
+        # Every retry above still combines author and title into one query --
+        # a source's query parser can fail on that combined term set for
+        # reasons unrelated to whether the book exists at all (verified: an
+        # apostrophe in the title breaking OpenLibrary's combined-term
+        # matching, see _sanitize_query -- that's now handled at the source,
+        # but this is a general backstop for whatever the next one turns out
+        # to be). Only worth the extra API call when every attempt so far
+        # came back completely empty, not just unconfident.
+        if not scored and parsed["title"]:
+            title_only = _search_and_score("", parsed["title"], category, match_method="title_only")
+            if title_only:
+                scored = title_only
+                confident = bool(scored) and scored[0]["score"] >= threshold
 
         # A clean "A - B" split doesn't always mean B is an author -- e.g.
         # translated works are often named "English Title - Native Title"

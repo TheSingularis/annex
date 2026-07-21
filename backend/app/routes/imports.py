@@ -180,3 +180,26 @@ def retry_import(import_id):
     db.session.commit()
     import_item.delay(record.id)
     return jsonify(record.to_dict())
+
+
+@imports_bp.post("/<int:import_id>/reset")
+def reset_import(import_id):
+    """Undo a wrong 'imported' decision, back to needs_review for re-review.
+    Deliberately scoped to imported-only (not a general status editor) --
+    added after a real false-positive batch (title_only retry matching a
+    same-titled but wrong-author book) needed correcting via the API rather
+    than direct DB access. Does NOT remove the hardlinked file(s) already
+    written under the wrong target_path -- that still needs manual cleanup
+    on the media share."""
+    record = Import.query.get_or_404(import_id)
+    if record.status != "imported":
+        return jsonify({"error": "Only imported records can be reset"}), 400
+
+    record.status = "needs_review"
+    record.resolved_author = None
+    record.resolved_title = None
+    record.resolved_series = None
+    record.resolved_series_seq = None
+    record.target_path = None
+    db.session.commit()
+    return jsonify(record.to_dict())

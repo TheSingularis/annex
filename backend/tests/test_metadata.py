@@ -204,7 +204,7 @@ def test_series_seq_conflict_disqualifies_high_scoring_candidate(app, monkeypatc
     # score. Even a candidate that scores WELL above threshold must be
     # hard-disqualified if its own series_seq ("8") disagrees with the
     # filename's parsed series_seq ("06").
-    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary", score_author=None):
         return [{
             "score": 0.95, "match_method": match_method,
             "title": "Zodiac Academy 8", "author": "Caroline Peckham, Susanne Valenti",
@@ -225,7 +225,7 @@ def test_summary_mill_title_pattern_disqualified_even_high_scoring(app, monkeypa
     # Regression: study-guide products titled "Summary of X" beat the real
     # book because the real title is a literal word-subset of theirs --
     # that means they can genuinely outscore the real book, not just tie.
-    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary", score_author=None):
         return [{
             "score": 0.97, "match_method": match_method,
             "title": "Summary of Atomic Habits by James Clear", "author": "Some Publisher",
@@ -244,7 +244,7 @@ def test_summary_mill_publisher_disqualified_multi_contributor_author(app, monke
     # Author strings are comma-joined multi-contributor lists (e.g. "IRB
     # Media, LLC"), not exact matches to the blocklist entry -- must match
     # per comma-segment, not the whole string.
-    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary", score_author=None):
         return [{
             "score": 0.92, "match_method": match_method,
             "title": "Surrounded by Psychopaths", "author": "IRB Media, LLC",
@@ -262,7 +262,7 @@ def test_summary_mill_publisher_disqualified_multi_contributor_author(app, monke
 def test_filter_candidates_empty_result_does_not_crash(app, monkeypatch):
     # Direct coverage of the IndexError risk: filtering every candidate out
     # must fall through to the standard empty-result shape, not raise.
-    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary", score_author=None):
         return [
             {"score": 0.9, "match_method": match_method, "title": "Summary of X", "author": "Wizer", "series": "", "series_seq": "", "source": "openlibrary"},
             {"score": 0.88, "match_method": match_method, "title": "Study Guide to X", "author": "Bookhabits", "series": "", "series_seq": "", "source": "openlibrary"},
@@ -434,7 +434,7 @@ def test_below_threshold_yields_no_match_but_keeps_candidates(app, http_mock):
 def test_comic_low_confidence_only_searches_once(app, monkeypatch):
     calls = []
 
-    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary", score_author=None):
         calls.append((author, title, is_comic))
         return []
 
@@ -484,8 +484,8 @@ def test_resolve_metadata_fills_series_from_filename(app, http_mock):
 def test_prose_low_confidence_retries_flip_and_subtitle_trim(app, monkeypatch):
     calls = []
 
-    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
-        calls.append((author, title))
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary", score_author=None):
+        calls.append((author, title, score_author))
         return []
 
     monkeypatch.setattr(metadata, "_search_and_score", fake_search_and_score)
@@ -497,14 +497,14 @@ def test_prose_low_confidence_retries_flip_and_subtitle_trim(app, monkeypatch):
 
     assert result["match"] is None
     assert len(calls) == 4
-    assert calls[3] == ("", "Some Title: A Subtitle")
+    assert calls[3] == ("", "Some Title: A Subtitle", "Some Author")
 
 
 def test_title_only_retry_finds_a_match_when_combined_query_finds_nothing(app, monkeypatch):
     # Simulates the real bug class this retry backstops: every combined
     # author+title query (primary, flipped, subtitle-trimmed) comes back
     # completely empty, but a title-only query would have found the book.
-    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary", score_author=None):
         if author == "" and title == "Moss'd in Space":
             return [{"score": 0.95, "match_method": match_method, "title": "Moss'd in Space",
                       "author": "Rebecca Thorne", "series": "", "series_seq": "", "source": "itunes"}]
@@ -519,12 +519,51 @@ def test_title_only_retry_finds_a_match_when_combined_query_finds_nothing(app, m
     assert result["match"]["author"] == "Rebecca Thorne"
 
 
+def test_title_only_retry_passes_real_author_as_score_author(app, monkeypatch):
+    # Wiring regression for a real false positive found live: the title_only
+    # retry must score candidates against the real parsed author, not the
+    # blanked one used for the query, or a same-titled but wrong-author book
+    # can win with a false-confident score ("The Beast" by Jenika Snow
+    # matched to "The Beast" by Robert Lawrence Stine).
+    captured = {}
+
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary", score_author=None):
+        if match_method == "title_only":
+            captured["author"] = author
+            captured["score_author"] = score_author
+            return []
+        return []
+
+    monkeypatch.setattr(metadata, "_search_and_score", fake_search_and_score)
+
+    metadata.resolve_metadata("The Beast by Jenika Snow", "ebook")
+
+    assert captured["author"] == ""
+    assert captured["score_author"] == "Jenika Snow"
+
+
+def test_title_only_retry_scoring_penalizes_wrong_author_candidate(app, http_mock):
+    # Same regression, exercised through the real _search_and_score/_score
+    # code path (not faked) -- an unrelated same-titled book must not score
+    # a false-confident match once score_author restores the normal
+    # 65/35 title/author blend.
+    http_mock.on_get("openlibrary.org", {
+        "docs": [{"title": "The Beast", "author_name": ["Robert Lawrence Stine"]}]
+    })
+
+    result = metadata._search_and_score(
+        "", "The Beast", "ebook", match_method="title_only", score_author="Jenika Snow"
+    )
+
+    assert result[0]["score"] < app.config["CONFIDENCE_THRESHOLD"]
+
+
 def test_title_only_retry_skipped_when_primary_already_has_candidates(app, monkeypatch):
     # Must not fire (and spend an extra API call) once there's anything to
     # work with -- only a fully empty result set should trigger it.
     calls = []
 
-    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary"):
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary", score_author=None):
         calls.append((author, title))
         return [{"score": 0.3, "match_method": match_method, "title": "Something Else",
                   "author": "Someone Else", "series": "", "series_seq": "", "source": "openlibrary"}]

@@ -108,6 +108,24 @@ def test_extract_prose_series_normalizes_fake_colon():
     assert result.series == "Throne of Glass"
 
 
+def test_extract_prose_accepts_underscore_as_colon_substitute():
+    # Mirrors app.metadata's identical fix: real example "Moss'd in Space_
+    # Moss'd in Space, Book 1.m4b" -- the real title is "Moss'd in Space:
+    # Moss'd in Space, Book 1", with '_' substituted for the illegal ':'.
+    result = extraction.extract_prose("Moss'd in Space_  Moss'd in Space, Book 1.m4b")
+    assert result.title == "Moss'd in Space"
+    assert result.series == "Moss'd in Space"
+    assert result.series_seq == "1"
+
+
+def test_extract_prose_underscore_word_separator_still_works():
+    # '_' is also a plain word-separator convention ("Author_-_Title") --
+    # widening the colon-series regex to accept '_' must not break that.
+    result = extraction.extract_prose("Frank_Herbert_-_Dune.epub")
+    assert result.author == "Frank Herbert"
+    assert result.title == "Dune"
+
+
 @pytest.mark.parametrize("name", [
     # A title with a number in it must not be misread as "series N" --
     # only a 3+ segment split (a real author segment present) is safe to

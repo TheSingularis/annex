@@ -224,7 +224,17 @@ def _finalize_import(record: Import, match: dict, files: list[Path]):
         series_seq=match.get("series_seq", ""),
     )
 
-    hardlink_files(files, target_dir, match["title"])
+    linked = hardlink_files(files, target_dir, match["title"])
+    if not linked:
+        # Every target already existed (e.g. two different downloads
+        # resolving to the same title) -- nothing was actually added to the
+        # library. Marking this "imported" would look successful while
+        # silently dropping the file.
+        record.status = "failed"
+        record.error_message = f"Target already exists, nothing new linked: {target_dir}"
+        db.session.commit()
+        return
+
     record.target_path = str(target_dir)
     record.status = "imported"
     db.session.commit()

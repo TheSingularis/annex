@@ -113,7 +113,7 @@ def test_run_import_backfills_isbn_from_old_match(db_app, monkeypatch):
         "candidates": [],
     })
     monkeypatch.setattr(tasks, "build_target_dir", lambda **k: Path("/tmp/target"))
-    monkeypatch.setattr(tasks, "hardlink_files", lambda files, target_dir, title: None)
+    monkeypatch.setattr(tasks, "hardlink_files", lambda files, target_dir, title: [Path("/tmp/target/Dune.epub")])
     monkeypatch.setattr(tasks.ABSClient, "scan_library", lambda self, category: None)
     monkeypatch.setattr(tasks.shadow_match_item, "delay", lambda *a, **k: None)
     db_app.config["SHADOW_MATCHER_ENABLED"] = False
@@ -122,3 +122,22 @@ def test_run_import_backfills_isbn_from_old_match(db_app, monkeypatch):
 
     assert record.isbn == "9780061122415"
     assert record.status == "imported"
+
+
+# --- _finalize_import ---
+
+def test_finalize_import_marks_failed_when_nothing_newly_linked(db_app, monkeypatch):
+    # Regression: a target collision (hardlink_files returns an empty list --
+    # every target already existed) used to still mark the record "imported",
+    # looking successful while silently dropping the file.
+    record = _make_import()
+    monkeypatch.setattr(tasks, "build_target_dir", lambda **k: Path("/tmp/target"))
+    monkeypatch.setattr(tasks, "hardlink_files", lambda files, target_dir, title: [])
+
+    tasks._finalize_import(
+        record, {"author": "Frank Herbert", "title": "Dune"}, [Path("/tmp/fake.epub")]
+    )
+
+    assert record.status == "failed"
+    assert "already exists" in record.error_message
+    assert record.target_path is None

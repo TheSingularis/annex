@@ -61,6 +61,14 @@ def hardlink_files(source_files: list[Path], target_dir: Path, title: str) -> li
     Links source_files into target_dir via hardlink, falling back to copy
     if source and destination are on different devices (common on Unraid).
     Single file: renamed to {title}{ext}. Multiple files: original names kept.
+
+    Returns only the files newly linked/copied by *this* call -- a target
+    that already existed (e.g. two different downloads resolving to the
+    same title) is logged and skipped, not counted as linked. An empty
+    return means nothing was actually added to the library this call, which
+    callers must treat as a failure rather than silently marking the import
+    "imported" (a target collision used to do exactly that: no new file on
+    disk, but the DB record still looked successful).
     """
     target_dir.mkdir(parents=True, exist_ok=True)
     linked = []
@@ -73,7 +81,6 @@ def hardlink_files(source_files: list[Path], target_dir: Path, title: str) -> li
 
         if dst.exists():
             current_app.logger.info(f"Link target already exists, skipping: {dst}")
-            linked.append(dst)
             continue
 
         try:

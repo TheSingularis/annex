@@ -307,15 +307,30 @@ def _score(candidate: dict, parsed: dict) -> float:
 # --- Search + score helpers ---
 
 def _search_and_score(
-    author: str, title: str, category: str, is_comic: bool = False, match_method: str = "primary"
+    author: str, title: str, category: str, is_comic: bool = False, match_method: str = "primary",
+    score_author: str | None = None,
 ) -> list:
     """Run the appropriate API search and return scored candidates, best first.
 
     match_method: provenance tag recording which resolve_metadata cascade
     branch produced this candidate list (e.g. "primary", "flipped",
-    "subtitle_trimmed") -- carried through to the UI for debugging."""
+    "subtitle_trimmed") -- carried through to the UI for debugging.
+
+    score_author: when set, scores candidates against this author instead of
+    `author` -- used by the title_only retry, which deliberately searches
+    with an empty author (to sidestep combined-query parser issues) but must
+    NOT also score with an empty author. `_score` gives 100% weight to title
+    when the scored author is empty (a well-tagged title-only *filename*
+    shouldn't be penalized for the absence), which is correct for a filename
+    that genuinely has no author -- but here the author was dropped only for
+    the query, not because we don't know it, so scoring blind let a
+    completely different book with the same title win with a perfect 1.0
+    (verified real false positives: "The Beast" by Jenika Snow matched to
+    "The Beast" by R.L. Stine; "The Hunter" by Jenika Snow matched to "The
+    Hunter" by Julia Leigh). Scoring against the real author restores the
+    normal 65/35 title/author blend and penalizes exactly these cases."""
     query = f"{author} {title}".strip()
-    parsed = {"author": author, "title": title}
+    parsed = {"author": author if score_author is None else score_author, "title": title}
 
     if category == "audiobook":
         candidates = _search_audible(query)
@@ -644,8 +659,17 @@ def _resolve_from_parsed(parsed: dict, category: str, is_comic: bool) -> dict:
         # but this is a general backstop for whatever the next one turns out
         # to be). Only worth the extra API call when every attempt so far
         # came back completely empty, not just unconfident.
+        #
+        # score_author=parsed["author"] is load-bearing, not optional: search
+        # with an empty author (to dodge combined-query breakage) but still
+        # score against the real one, so a same-titled but wrong-author book
+        # can't win with a false 1.0 (real false positives found live: "The
+        # Beast" by Jenika Snow -> R.L. Stine's unrelated "The Beast"; "The
+        # Hunter" by Jenika Snow -> Julia Leigh's unrelated "The Hunter").
         if not scored and parsed["title"]:
-            title_only = _search_and_score("", parsed["title"], category, match_method="title_only")
+            title_only = _search_and_score(
+                "", parsed["title"], category, match_method="title_only", score_author=parsed["author"]
+            )
             if title_only:
                 scored = title_only
                 confident = bool(scored) and scored[0]["score"] >= threshold

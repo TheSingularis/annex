@@ -20,6 +20,8 @@ app = create_app()
 # Always run on startup regardless of how the app is launched (gunicorn or direct)
 with app.app_context():
     db.create_all()
+    from app.db_migrations import migrate_schema
+    migrate_schema()
     from app.app_settings import migrate_from_db
     migrate_from_db()
 

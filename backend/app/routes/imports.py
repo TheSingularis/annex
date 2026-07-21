@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models import Import
+from app.models import Import, ShadowMatch
 from app.tasks import import_item, _finalize_import
 from app.metadata import resolve_metadata
 from app.fileops import discover_files, is_comic
@@ -23,6 +23,21 @@ def list_imports():
 def get_import(import_id):
     record = Import.query.get_or_404(import_id)
     return jsonify(record.to_dict())
+
+
+@imports_bp.get("/shadow-matches")
+def shadow_match_summary():
+    """Phase 4a observation-window summary: agree/disagree counts between the
+    old (live) resolver and the new, still-unwired one. See
+    /root/.claude/plans/jolly-greeting-karp.md (Phase 4a)."""
+    matches = ShadowMatch.query.order_by(ShadowMatch.created_at.desc()).limit(500).all()
+    return jsonify({
+        "total": len(matches),
+        "agree": sum(1 for m in matches if m.agrees is True),
+        "disagree": sum(1 for m in matches if m.agrees is False),
+        "errors": sum(1 for m in matches if m.error),
+        "matches": [m.to_dict() for m in matches],
+    })
 
 
 @imports_bp.post("/scan")

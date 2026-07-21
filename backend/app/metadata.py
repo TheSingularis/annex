@@ -566,6 +566,15 @@ def resolve_metadata(
     if hint_author and not parsed["author"]:
         parsed["author"] = hint_author.strip()
 
+    return _resolve_from_parsed(parsed, category, is_comic)
+
+
+def _resolve_from_parsed(parsed: dict, category: str, is_comic: bool) -> dict:
+    """The actual search/score/filter cascade, split out from resolve_metadata
+    so app.matching.orchestrator's shadow resolver (Phase 4a) can reuse it
+    with a dict from extraction.extract() instead of parse_torrent_name --
+    same keys (author, title, series, series_seq), extra isbn/asin keys are
+    simply ignored here same as today."""
     threshold = current_app.config["CONFIDENCE_THRESHOLD"]
 
     scored = _search_and_score(

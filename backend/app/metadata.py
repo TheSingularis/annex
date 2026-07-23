@@ -1,5 +1,6 @@
 import re
 import json
+import time
 import requests
 from thefuzz import fuzz
 from flask import current_app
@@ -427,24 +428,50 @@ def audible_product_to_candidate(product: dict) -> dict:
     }
 
 
+# Audible's unofficial catalog API has no documented SLA and rate-limits
+# aggressively under back-to-back requests (observed live: the Phase 4a
+# shadow resolver re-querying the same title ~10s after the real import
+# already had, got a 429 where the first request succeeded). Retry a
+# bounded number of times with backoff rather than immediately falling
+# through to iTunes/Google Books, which lack series data and can drop a
+# confident match below CONFIDENCE_THRESHOLD.
+_AUDIBLE_MAX_ATTEMPTS = 3
+_AUDIBLE_RETRY_BACKOFF_SECONDS = 1
+
+
 def _search_audible(query: str) -> list:
-    try:
-        resp = requests.get(
-            "https://api.audible.com/1.0/catalog/products",
-            params={
-                "keywords": query,
-                "num_results": 5,
-                "response_groups": "contributors,product_desc,product_attrs,series",
-            },
-            headers={"User-Agent": "Mozilla/5.0"},
-            timeout=10,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        return [audible_product_to_candidate(p) for p in data.get("products", [])[:5]]
-    except Exception as e:
-        current_app.logger.warning(f"Audible search failed: {e}")
-        return []
+    for attempt in range(_AUDIBLE_MAX_ATTEMPTS):
+        try:
+            resp = requests.get(
+                "https://api.audible.com/1.0/catalog/products",
+                params={
+                    "keywords": query,
+                    "num_results": 5,
+                    "response_groups": "contributors,product_desc,product_attrs,series",
+                },
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return [audible_product_to_candidate(p) for p in data.get("products", [])[:5]]
+        except requests.exceptions.HTTPError as e:
+            status = e.response.status_code if e.response is not None else None
+            retryable = status == 429 or (status is not None and status >= 500)
+            if retryable and attempt < _AUDIBLE_MAX_ATTEMPTS - 1:
+                retry_after = e.response.headers.get("Retry-After") if e.response is not None else None
+                delay = float(retry_after) if retry_after else _AUDIBLE_RETRY_BACKOFF_SECONDS * (2 ** attempt)
+                time.sleep(delay)
+                continue
+            current_app.logger.warning(f"Audible search failed: {e}")
+            return []
+        except requests.exceptions.RequestException as e:
+            if attempt < _AUDIBLE_MAX_ATTEMPTS - 1:
+                time.sleep(_AUDIBLE_RETRY_BACKOFF_SECONDS * (2 ** attempt))
+                continue
+            current_app.logger.warning(f"Audible search failed: {e}")
+            return []
+    return []
 
 
 def _search_itunes(query: str) -> list:

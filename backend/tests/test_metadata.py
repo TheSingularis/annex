@@ -398,6 +398,111 @@ def test_search_googlebooks_isbn10_fallback(app, http_mock):
     assert results[0]["isbn"] == "0061122416"
 
 
+# --- _search_audible: retry/backoff on rate limiting (real bug: the Phase
+# 4a shadow resolver re-querying Audible ~10s after the real import's own
+# query got a 429 where the first request had succeeded) ---
+
+class _FakeAudibleResp:
+    def __init__(self, status_code=200, json_data=None, headers=None):
+        self.status_code = status_code
+        self.headers = headers or {}
+        self._json = json_data or {}
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise metadata.requests.exceptions.HTTPError(response=self)
+
+    def json(self):
+        return self._json
+
+
+def test_search_audible_retries_on_429_then_succeeds(app, monkeypatch):
+    responses = [
+        _FakeAudibleResp(status_code=429, headers={"Retry-After": "0"}),
+        _FakeAudibleResp(json_data={"products": [
+            {"title": "Dune", "authors": [{"name": "Frank Herbert"}]}
+        ]}),
+    ]
+    calls = []
+
+    def fake_get(url, **kwargs):
+        calls.append(url)
+        return responses.pop(0)
+
+    monkeypatch.setattr(metadata.requests, "get", fake_get)
+    monkeypatch.setattr(metadata.time, "sleep", lambda s: None)
+
+    results = metadata._search_audible("Dune Frank Herbert")
+
+    assert len(calls) == 2
+    assert results[0]["title"] == "Dune"
+
+
+def test_search_audible_honors_retry_after_header(app, monkeypatch):
+    responses = [
+        _FakeAudibleResp(status_code=429, headers={"Retry-After": "7"}),
+        _FakeAudibleResp(json_data={"products": []}),
+    ]
+    sleeps = []
+
+    monkeypatch.setattr(metadata.requests, "get", lambda url, **k: responses.pop(0))
+    monkeypatch.setattr(metadata.time, "sleep", lambda s: sleeps.append(s))
+
+    metadata._search_audible("Dune Frank Herbert")
+
+    assert sleeps == [7.0]
+
+
+def test_search_audible_gives_up_after_max_attempts_on_persistent_429(app, monkeypatch):
+    calls = []
+
+    def fake_get(url, **kwargs):
+        calls.append(url)
+        return _FakeAudibleResp(status_code=429)
+
+    monkeypatch.setattr(metadata.requests, "get", fake_get)
+    monkeypatch.setattr(metadata.time, "sleep", lambda s: None)
+
+    results = metadata._search_audible("Dune Frank Herbert")
+
+    assert results == []
+    assert len(calls) == metadata._AUDIBLE_MAX_ATTEMPTS
+
+
+def test_search_audible_retries_on_connection_error(app, monkeypatch):
+    calls = {"n": 0}
+
+    def fake_get(url, **kwargs):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise metadata.requests.exceptions.ConnectionError("boom")
+        return _FakeAudibleResp(json_data={"products": []})
+
+    monkeypatch.setattr(metadata.requests, "get", fake_get)
+    monkeypatch.setattr(metadata.time, "sleep", lambda s: None)
+
+    results = metadata._search_audible("Dune Frank Herbert")
+
+    assert calls["n"] == 2
+    assert results == []
+
+
+def test_search_audible_does_not_retry_non_retryable_http_error(app, monkeypatch):
+    calls = []
+
+    def fake_get(url, **kwargs):
+        calls.append(url)
+        return _FakeAudibleResp(status_code=404)
+
+    monkeypatch.setattr(metadata.requests, "get", fake_get)
+    monkeypatch.setattr(metadata.time, "sleep", lambda s: None)
+
+    results = metadata._search_audible("Dune Frank Herbert")
+
+    assert results == []
+    assert len(calls) == 1
+
+
 # --- resolve_metadata: source cascades (mocked HTTP) ---
 
 def test_audiobook_cascade_stops_at_first_nonempty_source(app, http_mock):

@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 # Minimum seconds since last modification before a path is considered stable
 FILE_STABILITY_SECONDS = 60
 
+# How long to wait before running the shadow-mode resolver, so its Audible
+# request doesn't land immediately after the real import's own Audible call
+# for the same title.
+SHADOW_MATCH_DELAY_SECONDS = 30
+
 
 def _is_stable(path: Path) -> bool:
     """Returns True if the path hasn't been modified recently."""
@@ -200,7 +205,15 @@ def _run_import(record: Import):
     record.isbn = (result["match"] or {}).get("isbn", "") or None
 
     if current_app.config["SHADOW_MATCHER_ENABLED"]:
-        shadow_match_item.delay(record.id, result, hint_author, is_comic_file)
+        # Countdown, not .delay(): dispatching immediately re-queries the
+        # same Audible endpoint the real import above just hit, and Audible
+        # rate-limits back-to-back requests for the same title (see
+        # _search_audible's retry comment in app/metadata.py). Spacing it
+        # out reduces how often the shadow-only call gets rate-limited.
+        shadow_match_item.apply_async(
+            args=[record.id, result, hint_author, is_comic_file],
+            countdown=SHADOW_MATCH_DELAY_SECONDS,
+        )
 
     if result["match"] is None:
         record.status = "needs_review"

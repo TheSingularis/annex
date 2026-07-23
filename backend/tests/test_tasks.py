@@ -78,13 +78,18 @@ def test_run_import_dispatches_shadow_task_when_enabled(db_app, monkeypatch):
         "confidence": 0.2, "match": None, "candidates": []
     })
     calls = []
-    monkeypatch.setattr(tasks.shadow_match_item, "delay", lambda *a, **k: calls.append(a))
+    monkeypatch.setattr(
+        tasks.shadow_match_item, "apply_async",
+        lambda args=None, countdown=None, **k: calls.append((args, countdown)),
+    )
     db_app.config["SHADOW_MATCHER_ENABLED"] = True
 
     tasks._run_import(record)
 
     assert len(calls) == 1
-    assert calls[0][0] == record.id
+    args, countdown = calls[0]
+    assert args[0] == record.id
+    assert countdown == tasks.SHADOW_MATCH_DELAY_SECONDS
 
 
 def test_run_import_skips_shadow_dispatch_when_disabled(db_app, monkeypatch):
@@ -95,7 +100,10 @@ def test_run_import_skips_shadow_dispatch_when_disabled(db_app, monkeypatch):
         "confidence": 0.2, "match": None, "candidates": []
     })
     calls = []
-    monkeypatch.setattr(tasks.shadow_match_item, "delay", lambda *a, **k: calls.append(a))
+    monkeypatch.setattr(
+        tasks.shadow_match_item, "apply_async",
+        lambda args=None, countdown=None, **k: calls.append((args, countdown)),
+    )
     db_app.config["SHADOW_MATCHER_ENABLED"] = False
 
     tasks._run_import(record)

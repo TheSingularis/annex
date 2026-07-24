@@ -110,7 +110,7 @@ export default function Dashboard() {
               </select>
               <Input placeholder="Author (optional — series data still looked up)" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} />
               <Input placeholder="Title (optional)" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
-              {error && <div style={{ color: "var(--clay)", fontSize: 13 }}>{error}</div>}
+              {error && <div style={{ color: "var(--danger-text)", fontSize: 13 }}>{error}</div>}
               <div style={{ display: "flex", gap: 8 }}>
                 <Button type="submit" variant="success" disabled={submitting}>
                   {submitting ? "Adding..." : "Add Book"}
@@ -185,7 +185,7 @@ export default function Dashboard() {
                   </div>
 
                   {imp.status === "failed" && imp.error_message && (
-                    <div style={{ marginTop: 8, fontSize: 12, color: "var(--clay)" }}>{imp.error_message}</div>
+                    <div style={{ marginTop: 8, fontSize: 12, color: "var(--danger-text)" }}>{imp.error_message}</div>
                   )}
                 </CatalogCard>
               );

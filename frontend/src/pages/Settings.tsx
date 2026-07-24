@@ -221,7 +221,7 @@ export default function Settings() {
               {clearing === "all" ? "Clearing…" : "Clear all"}
             </Button>
           </div>
-          {clearMsg && <div style={{ marginTop: 10, fontSize: 13, color: "var(--moss)" }}>{clearMsg}</div>}
+          {clearMsg && <div style={{ marginTop: 10, fontSize: 13, color: "var(--success-text)" }}>{clearMsg}</div>}
         </CatalogCard>
 
         {envConfig && (

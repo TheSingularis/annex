@@ -25,6 +25,18 @@
   --radius-card: 3px;
   --shadow-stamp-inset: inset 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 -1px 1px rgba(255, 255, 255, 0.05);
 
+  /* stamp ink: a rubber stamp is ink on paper, so the chip stays a fixed
+     pale paper tone and the "ink" is a darkened accent -- regardless of
+     app theme. Using the raw accent hues directly as text (against a
+     tinted-dark chip in dark mode) measured 1.7-3.4:1 contrast, well under
+     the 4.5:1 AA minimum; these darkened variants measure 5.5-8.4:1
+     against --stamp-bg. */
+  --stamp-bg: color-mix(in srgb, var(--ledger) 100%, white 15%);
+  --moss-ink: color-mix(in srgb, var(--moss) 100%, black 25%);
+  --clay-ink: color-mix(in srgb, var(--clay) 100%, black 20%);
+  --brass-ink: color-mix(in srgb, var(--brass) 100%, black 30%);
+  --slate-ink: color-mix(in srgb, var(--slate) 100%, black 20%);
+
   /* nav -- fixed dark drawer-front treatment, independent of light/dark toggle */
   --nav-bg: linear-gradient(165deg, #23291f 0%, #1b211e 100%);
   --nav-bg-active: color-mix(in srgb, var(--brass) 100%, transparent 85%);
@@ -35,7 +47,11 @@
   /* theme-varying: light (default) */
   --bg: var(--ledger);
   --text: var(--ink);
-  --text-muted: var(--slate);
+  /* raw --slate measured only 4.6-5.0:1 against light surfaces -- darkened
+     for a comfortable margin, since small 11-12px UI text needs it. */
+  --text-muted: color-mix(in srgb, var(--slate) 100%, black 20%);
+  --danger-text: var(--clay);
+  --success-text: var(--moss);
   --surface: color-mix(in srgb, var(--ledger) 100%, white 40%);
   --surface-hover: color-mix(in srgb, var(--ledger) 100%, white 25%);
   --border: color-mix(in srgb, var(--slate) 100%, transparent 65%);
@@ -47,7 +63,11 @@
 :root[data-theme="dark"] {
   --bg: var(--ink);
   --text: var(--ledger);
-  --text-muted: var(--slate);
+  /* raw --slate measured only 2.7:1 against dark surfaces -- lightened,
+     same reasoning as light mode above but in the other direction. */
+  --text-muted: color-mix(in srgb, var(--slate) 100%, white 55%);
+  --danger-text: color-mix(in srgb, var(--clay) 100%, white 55%);
+  --success-text: color-mix(in srgb, var(--moss) 100%, white 60%);
   --surface: color-mix(in srgb, var(--ink) 100%, white 8%);
   --surface-hover: color-mix(in srgb, var(--ink) 100%, white 14%);
   --border: color-mix(in srgb, var(--slate) 100%, transparent 55%);

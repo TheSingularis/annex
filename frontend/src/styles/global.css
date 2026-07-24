@@ -1,0 +1,257 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#root {
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+a {
+  color: var(--brass);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* --- status stamp: the one signature element, carried everywhere status appears --- */
+
+.status-stamp {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 2px;
+  border: 1px solid currentColor;
+  box-shadow: var(--shadow-stamp-inset);
+  transform: rotate(-2deg);
+  white-space: nowrap;
+}
+
+.status-stamp--moss { color: var(--moss); background: color-mix(in srgb, var(--moss) 100%, transparent 88%); }
+.status-stamp--clay { color: var(--clay); background: color-mix(in srgb, var(--clay) 100%, transparent 88%); }
+.status-stamp--brass { color: var(--brass); background: color-mix(in srgb, var(--brass) 100%, transparent 88%); }
+.status-stamp--slate { color: var(--slate); background: color-mix(in srgb, var(--slate) 100%, transparent 88%); }
+
+/* --- catalog card: the shared shell for Dashboard rows and Review's candidate cards --- */
+
+.catalog-card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  border-left: 3px solid var(--slate);
+  padding: 16px 18px;
+}
+
+.catalog-card--moss { border-left-color: var(--moss); }
+.catalog-card--clay { border-left-color: var(--clay); }
+.catalog-card--brass { border-left-color: var(--brass); }
+.catalog-card--slate { border-left-color: var(--slate); }
+
+.catalog-card--compact { padding: 10px 12px; font-size: 13px; }
+.catalog-card--clickable { cursor: pointer; }
+.catalog-card--clickable:hover { background: var(--surface-hover); }
+.catalog-card--selected { outline: 2px solid var(--brass); outline-offset: -1px; }
+
+.catalog-card__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text);
+  margin: 0 0 2px;
+}
+
+.catalog-card__meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.catalog-card__strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* --- confidence bar --- */
+
+.confidence-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confidence-bar__track {
+  flex: 1;
+  min-width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.confidence-bar__fill {
+  height: 100%;
+  background: var(--brass);
+}
+
+.confidence-bar__label {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 32px;
+  text-align: right;
+}
+
+/* --- buttons --- */
+
+.btn {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius-card);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn--sm { font-size: 12px; padding: 4px 10px; }
+
+.btn--primary { background: var(--brass); color: var(--ledger); }
+.btn--primary:hover:not(:disabled) { background: color-mix(in srgb, var(--brass) 85%, black 15%); }
+
+.btn--secondary { background: transparent; color: var(--text-muted); border-color: var(--border); }
+.btn--secondary:hover:not(:disabled) { background: var(--surface-hover); }
+
+.btn--success { background: var(--moss); color: var(--ledger); }
+.btn--success:hover:not(:disabled) { background: color-mix(in srgb, var(--moss) 85%, black 15%); }
+
+.btn--danger { background: transparent; color: var(--clay); border-color: var(--clay); }
+.btn--danger:hover:not(:disabled) { background: var(--warning-bg); }
+
+/* --- inputs --- */
+
+.input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.input::placeholder { color: var(--text-muted); }
+
+/* --- nav shell: theme-invariant "cabinet drawer front" treatment, applied
+   once here and reused by all three nav surfaces (desktop sidebar, mobile
+   drawer, mobile bottom-tab bar) so they can't drift from each other --- */
+
+.nav-surface {
+  background: var(--nav-bg);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--nav-text-active);
+}
+
+.nav-link {
+  display: block;
+  color: var(--nav-text);
+  text-decoration: none;
+  font-size: 14px;
+  border-left: 3px solid transparent;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+}
+
+.nav-link.active {
+  color: var(--nav-text-active);
+  background: var(--nav-bg-active);
+  border-left-color: var(--nav-border-active);
+}
+
+.nav-link--drawer {
+  border-radius: 0;
+  padding: 12px 20px;
+  margin-bottom: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nav-link--tab {
+  flex: 1;
+  text-align: center;
+  border-left: none;
+  border-top: 2px solid transparent;
+  padding: 10px 4px 8px;
+  font-size: 11px;
+  margin-bottom: 0;
+  border-radius: 0;
+}
+
+.nav-link--tab.active {
+  border-top-color: var(--nav-border-active);
+  font-weight: 600;
+}
+
+.nav-icon-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-card);
+  color: var(--nav-text);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.nav-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}

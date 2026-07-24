@@ -1,10 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api, Import, Candidate } from "../lib/api";
-import { useTheme } from "../lib/ThemeContext";
 import { useIsMobile } from "../lib/useIsMobile";
+import { StatusStamp, importStatusStamp } from "../components/StatusStamp";
+import { CatalogCard } from "../components/CatalogCard";
+import { ConfidenceBar } from "../components/ConfidenceBar";
+import { Button } from "../components/Button";
+import { Input } from "../components/Input";
+
+function useCandidates(json: string | null): Candidate[] {
+  return useMemo(() => (json ? JSON.parse(json) : []), [json]);
+}
 
 export default function Review() {
-  const { tokens } = useTheme();
   const isMobile = useIsMobile();
   const [imports, setImports] = useState<Import[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,98 +79,50 @@ export default function Review() {
     }
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%", padding: "8px 12px", border: `1px solid ${tokens.inputBorder}`,
-    borderRadius: 6, fontSize: 14, boxSizing: "border-box",
-    background: tokens.surface, color: tokens.text,
-  };
-
   return (
     <div>
-      <h1 style={{ fontSize: 24, marginBottom: 24, color: tokens.text }}>Needs Review ({imports.length})</h1>
+      <h1 style={{ fontSize: 24, marginBottom: 24 }}>Needs Review ({imports.length})</h1>
 
-      {loading ? <div style={{ color: tokens.textMuted }}>Loading...</div> : imports.length === 0 ? (
-        <div style={{ color: tokens.textMuted, padding: 32, textAlign: "center" }}>Nothing to review</div>
+      {loading ? <div style={{ color: "var(--text-muted)" }}>Loading...</div> : imports.length === 0 ? (
+        <CatalogCard><div style={{ color: "var(--text-muted)", padding: 12, textAlign: "center" }}>Nothing to review</div></CatalogCard>
       ) : (
         <div style={{ display: "grid", gap: 12 }}>
-          {imports.map(imp => {
-            const candidates: Candidate[] = imp.candidates_json ? JSON.parse(imp.candidates_json) : [];
-            return (
-              <div key={imp.id} style={{ background: tokens.surface, borderRadius: 8, padding: 20, boxShadow: tokens.shadow }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <div style={{ fontWeight: 600, marginBottom: 4, color: tokens.text }}>{imp.name}</div>
-                    <div style={{ fontSize: 12, color: tokens.textMuted }}>{imp.category} · {imp.content_path}</div>
-                    {imp.metadata_confidence != null && (
-                      <div style={{ fontSize: 12, color: "#fd7e14", marginTop: 4 }}>
-                        Best match confidence: {Math.round(imp.metadata_confidence * 100)}%
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => openReview(imp)} style={btnStyle("#0d6efd")}>Review</button>
-                    <button
-                      onClick={() => handleRetry(imp.id)}
-                      disabled={retrying === imp.id}
-                      style={btnStyle("#6c757d")}
-                    >
-                      {retrying === imp.id ? "…" : "Retry"}
-                    </button>
-                  </div>
-                </div>
-
-                {candidates.length > 0 && (
-                  <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {candidates.map((c, i) => (
-                      <div key={i} style={{ background: tokens.surfaceHover, border: `1px solid ${tokens.border}`, borderRadius: 6, padding: "6px 10px", fontSize: 12, color: tokens.text }}>
-                        <strong>{c.title}</strong> — {c.author}
-                        <span style={{ color: tokens.textMuted, marginLeft: 6 }}>{Math.round(c.score * 100)}%</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {imports.map(imp => (
+            <ReviewCard
+              key={imp.id}
+              imp={imp}
+              retrying={retrying === imp.id}
+              onReview={() => openReview(imp)}
+              onRetry={() => handleRetry(imp.id)}
+            />
+          ))}
         </div>
       )}
 
       {active && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-          <div style={{ background: tokens.surface, borderRadius: isMobile ? 0 : 10, padding: isMobile ? 20 : 32, width: isMobile ? "100%" : 520, maxHeight: isMobile ? "100%" : "90vh", height: isMobile ? "100%" : undefined, overflow: "auto", boxShadow: "0 8px 32px rgba(0,0,0,.3)" }}>
-            <h2 style={{ margin: "0 0 8px", color: tokens.text }}>Resolve Metadata</h2>
-            <div style={{ fontSize: 13, color: tokens.textMuted, marginBottom: 20 }}>{active.name}</div>
+          <div className="catalog-card" style={{
+            borderLeft: "none", width: isMobile ? "100%" : 520, height: isMobile ? "100%" : undefined,
+            maxHeight: isMobile ? "100%" : "90vh", overflow: "auto", padding: isMobile ? 20 : 32,
+            boxShadow: "0 8px 32px rgba(0,0,0,.3)", borderRadius: isMobile ? 0 : "var(--radius-card)",
+          }}>
+            <h2 className="catalog-card__title" style={{ fontSize: 20, marginBottom: 4 }}>Resolve Metadata</h2>
+            <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 20 }}>{active.name}</div>
 
-            {active.candidates_json && JSON.parse(active.candidates_json).length > 0 && (
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: tokens.text }}>Candidates</div>
-                {(JSON.parse(active.candidates_json) as Candidate[]).map((c, i) => (
-                  <div
-                    key={i}
-                    onClick={() => selectCandidate(c)}
-                    style={{ border: `1px solid ${tokens.border}`, borderRadius: 6, padding: "10px 12px", marginBottom: 6, cursor: "pointer", fontSize: 13, color: tokens.text, background: tokens.surfaceHover }}
-                  >
-                    <strong>{c.title}</strong> — {c.author}
-                    {c.series && <span style={{ color: tokens.textMuted }}> ({c.series} #{c.series_seq})</span>}
-                    <span style={{ color: tokens.textMuted, fontSize: 11, marginLeft: 6 }}>[{c.source}/{c.match_method}]</span>
-                    <span style={{ float: "right", color: tokens.textMuted }}>{Math.round(c.score * 100)}%</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            <CandidateList json={active.candidates_json} onSelect={selectCandidate} form={form} />
 
             <form onSubmit={handleApprove}>
               <div style={{ display: "grid", gap: 10 }}>
-                <input required placeholder="Author" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} style={inputStyle} />
-                <input required placeholder="Title" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} style={inputStyle} />
-                <input placeholder="Series (optional)" value={form.series} onChange={e => setForm(f => ({ ...f, series: e.target.value }))} style={inputStyle} />
-                <input placeholder="Series # (optional)" value={form.series_seq} onChange={e => setForm(f => ({ ...f, series_seq: e.target.value }))} style={inputStyle} />
-                {error && <div style={{ color: "#dc3545", fontSize: 13 }}>{error}</div>}
+                <Input required placeholder="Author" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} />
+                <Input required placeholder="Title" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+                <Input placeholder="Series (optional)" value={form.series} onChange={e => setForm(f => ({ ...f, series: e.target.value }))} />
+                <Input placeholder="Series # (optional)" value={form.series_seq} onChange={e => setForm(f => ({ ...f, series_seq: e.target.value }))} />
+                {error && <div style={{ color: "var(--clay)", fontSize: 13 }}>{error}</div>}
                 <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                  <button type="submit" disabled={submitting} style={btnStyle("#198754")}>
+                  <Button type="submit" variant="success" disabled={submitting}>
                     {submitting ? "Importing..." : "Confirm & Import"}
-                  </button>
-                  <button type="button" onClick={() => setActive(null)} style={btnStyle("#6c757d")}>Cancel</button>
+                  </Button>
+                  <Button type="button" onClick={() => setActive(null)}>Cancel</Button>
                 </div>
               </div>
             </form>
@@ -174,7 +133,70 @@ export default function Review() {
   );
 }
 
-const btnStyle = (bg: string): React.CSSProperties => ({
-  background: bg, color: "#fff", border: "none", borderRadius: 6,
-  padding: "8px 16px", cursor: "pointer", fontSize: 14,
-});
+function ReviewCard({ imp, retrying, onReview, onRetry }: {
+  imp: Import; retrying: boolean; onReview: () => void; onRetry: () => void;
+}) {
+  const candidates = useCandidates(imp.candidates_json);
+  const stamp = importStatusStamp(imp.status);
+
+  return (
+    <CatalogCard tone={stamp.tone}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="catalog-card__title">{imp.name}</div>
+          <div className="catalog-card__meta">{imp.category} · {imp.content_path}</div>
+          {imp.metadata_confidence != null && (
+            <div style={{ marginTop: 8, maxWidth: 220 }}>
+              <ConfidenceBar value={imp.metadata_confidence} />
+            </div>
+          )}
+        </div>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <Button size="sm" variant="primary" onClick={onReview}>Review</Button>
+          <Button size="sm" onClick={onRetry} disabled={retrying}>{retrying ? "…" : "Retry"}</Button>
+        </div>
+      </div>
+
+      {candidates.length > 0 && (
+        <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {candidates.map((c, i) => (
+            <CatalogCard key={i} compact tone="slate">
+              <strong>{c.title}</strong> — {c.author}
+              <span className="mono" style={{ color: "var(--text-muted)", marginLeft: 6 }}>{Math.round(c.score * 100)}%</span>
+            </CatalogCard>
+          ))}
+        </div>
+      )}
+    </CatalogCard>
+  );
+}
+
+function CandidateList({ json, onSelect, form }: {
+  json: string | null; onSelect: (c: Candidate) => void; form: { author: string; title: string };
+}) {
+  const candidates = useCandidates(json);
+  if (candidates.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Candidates</div>
+      <div style={{ display: "grid", gap: 6 }}>
+        {candidates.map((c, i) => {
+          const selected = c.title === form.title && c.author === form.author;
+          return (
+            <CatalogCard key={i} compact tone="brass" selected={selected} onClick={() => onSelect(c)}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
+                <span>
+                  <strong>{c.title}</strong> — {c.author}
+                  {c.series && <span style={{ color: "var(--text-muted)" }}> ({c.series} #{c.series_seq})</span>}
+                  <span className="mono" style={{ color: "var(--text-muted)", fontSize: 11, marginLeft: 6 }}>[{c.source}/{c.match_method}]</span>
+                </span>
+                <span className="mono" style={{ color: "var(--text-muted)", flexShrink: 0 }}>{Math.round(c.score * 100)}%</span>
+              </div>
+            </CatalogCard>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

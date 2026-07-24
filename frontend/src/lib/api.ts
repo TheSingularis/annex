@@ -16,6 +16,7 @@ export interface Import {
   target_path: string | null;
   candidates_json: string | null;
   error_message: string | null;
+  isbn: string | null;
   created_at: string;
   updated_at: string;
 }

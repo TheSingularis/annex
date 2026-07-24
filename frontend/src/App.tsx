@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Routes, Route, NavLink, useNavigate } from "react-router-dom";
+import { Routes, Route, NavLink } from "react-router-dom";
 import { useTheme } from "./lib/ThemeContext";
 import { useIsMobile } from "./lib/useIsMobile";
 import Dashboard from "./pages/Dashboard";
@@ -13,45 +13,29 @@ const NAV_LINKS = [
 ];
 
 export default function App() {
-  const { tokens, theme, toggle } = useTheme();
+  const { theme, toggle } = useTheme();
   const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const navLinkStyle = (isActive: boolean): React.CSSProperties => ({
-    display: "block",
-    padding: isMobile ? "12px 20px" : "8px 12px",
-    marginBottom: isMobile ? 0 : 4,
-    borderRadius: isMobile ? 0 : 6,
-    color: isActive ? tokens.navTextActive : tokens.navText,
-    background: isActive ? tokens.navActive : "transparent",
-    textDecoration: "none",
-    fontSize: 14,
-    borderBottom: isMobile ? `1px solid ${tokens.border}` : undefined,
-  });
-
   if (isMobile) {
     return (
-      <div style={{ minHeight: "100vh", fontFamily: "system-ui, sans-serif", background: tokens.bg, color: tokens.text }}>
+      <div style={{ minHeight: "100vh" }}>
         {/* Top bar */}
-        <div style={{
+        <div className="nav-surface" style={{
           position: "sticky", top: 0, zIndex: 50,
-          background: tokens.navBg, borderBottom: `1px solid ${tokens.border}`,
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "0 16px", height: 52,
         }}>
-          <span style={{ fontWeight: 700, fontSize: 17, color: tokens.navTextActive }}>Annex</span>
+          <span className="brand" style={{ fontSize: 17 }}>Annex</span>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button
+              className="nav-icon-btn"
               onClick={toggle}
-              style={{ background: "none", border: "none", color: tokens.navText, cursor: "pointer", fontSize: 18, padding: 4 }}
               title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
             >
               {theme === "light" ? "🌙" : "☀️"}
             </button>
-            <button
-              onClick={() => setDrawerOpen(o => !o)}
-              style={{ background: "none", border: `1px solid ${tokens.navText}44`, borderRadius: 6, color: tokens.navText, cursor: "pointer", fontSize: 18, padding: "4px 8px", lineHeight: 1 }}
-            >
+            <button className="nav-icon-btn" onClick={() => setDrawerOpen(o => !o)}>
               ☰
             </button>
           </div>
@@ -64,20 +48,20 @@ export default function App() {
               onClick={() => setDrawerOpen(false)}
               style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(0,0,0,.4)" }}
             />
-            <div style={{
+            <div className="nav-surface" style={{
               position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 70,
-              width: 220, background: tokens.navBg,
+              width: 220,
               boxShadow: "-4px 0 16px rgba(0,0,0,.2)",
               display: "flex", flexDirection: "column", paddingTop: 16,
             }}>
-              <div style={{ fontWeight: 700, fontSize: 17, color: tokens.navTextActive, padding: "0 20px 16px" }}>Annex</div>
+              <div className="brand" style={{ fontSize: 17, padding: "0 20px 16px" }}>Annex</div>
               {NAV_LINKS.map(({ to, label }) => (
                 <NavLink
                   key={to}
                   to={to}
                   end={to === "/"}
                   onClick={() => setDrawerOpen(false)}
-                  style={({ isActive }) => navLinkStyle(isActive)}
+                  className={({ isActive }) => `nav-link nav-link--drawer${isActive ? " active" : ""}`}
                 >
                   {label}
                 </NavLink>
@@ -87,9 +71,8 @@ export default function App() {
         )}
 
         {/* Bottom nav bar */}
-        <nav style={{
+        <nav className="nav-surface" style={{
           position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
-          background: tokens.navBg, borderTop: `1px solid ${tokens.border}`,
           display: "flex",
         }}>
           {NAV_LINKS.map(({ to, label }) => (
@@ -97,12 +80,7 @@ export default function App() {
               key={to}
               to={to}
               end={to === "/"}
-              style={({ isActive }) => ({
-                flex: 1, textAlign: "center", padding: "10px 4px 8px",
-                color: isActive ? tokens.navTextActive : tokens.navText,
-                textDecoration: "none", fontSize: 11, fontWeight: isActive ? 600 : 400,
-                borderTop: isActive ? `2px solid ${tokens.navTextActive}` : "2px solid transparent",
-              })}
+              className={({ isActive }) => `nav-link nav-link--tab${isActive ? " active" : ""}`}
             >
               {label === "Needs Review" ? "Review" : label}
             </NavLink>
@@ -122,29 +100,26 @@ export default function App() {
 
   // Desktop layout
   return (
-    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "system-ui, sans-serif", background: tokens.bg, color: tokens.text }}>
-      <nav style={{ width: 200, background: tokens.navBg, padding: "24px 16px", display: "flex", flexDirection: "column", flexShrink: 0 }}>
-        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 32, color: tokens.navTextActive }}>Annex</div>
+    <div style={{ display: "flex", minHeight: "100vh" }}>
+      <nav className="nav-surface" style={{ width: 200, padding: "24px 16px", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+        <div className="brand" style={{ fontSize: 18, marginBottom: 32 }}>Annex</div>
         <div style={{ flex: 1 }}>
           {NAV_LINKS.map(({ to, label }) => (
             <NavLink
               key={to}
               to={to}
               end={to === "/"}
-              style={({ isActive }) => navLinkStyle(isActive)}
+              className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
             >
               {label}
             </NavLink>
           ))}
         </div>
         <button
+          className="nav-icon-btn"
           onClick={toggle}
           title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-          style={{
-            background: "none", border: `1px solid ${tokens.navText}44`,
-            borderRadius: 6, color: tokens.navText, padding: "6px 10px",
-            cursor: "pointer", fontSize: 12, textAlign: "left",
-          }}
+          style={{ fontSize: 12, textAlign: "left", padding: "6px 10px" }}
         >
           {theme === "light" ? "Dark mode" : "Light mode"}
         </button>

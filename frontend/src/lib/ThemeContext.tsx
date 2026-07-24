@@ -1,9 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Theme, ThemeTokens, themes, getSavedTheme, saveTheme } from "./theme";
+import { Theme, getSavedTheme, saveTheme } from "./theme";
 
 interface ThemeContextValue {
   theme: Theme;
-  tokens: ThemeTokens;
   toggle: () => void;
 }
 
@@ -13,7 +12,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(getSavedTheme);
 
   useEffect(() => {
-    document.body.style.background = themes[theme].bg;
+    document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
   const toggle = () => {
@@ -25,7 +24,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, tokens: themes[theme], toggle }}>
+    <ThemeContext.Provider value={{ theme, toggle }}>
       {children}
     </ThemeContext.Provider>
   );

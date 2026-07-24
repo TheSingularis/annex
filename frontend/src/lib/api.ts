@@ -17,6 +17,7 @@ export interface Import {
   candidates_json: string | null;
   error_message: string | null;
   isbn: string | null;
+  asin: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -29,6 +30,7 @@ export interface Candidate {
   score: number;
   source: string;
   match_method: string;
+  isbn?: string;
 }
 
 const BASE = "/api";

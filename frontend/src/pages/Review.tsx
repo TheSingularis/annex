@@ -107,7 +107,9 @@ export default function Review() {
             boxShadow: "0 8px 32px rgba(0,0,0,.3)", borderRadius: isMobile ? 0 : "var(--radius-card)",
           }}>
             <h2 className="catalog-card__title" style={{ fontSize: 20, marginBottom: 4 }}>Resolve Metadata</h2>
-            <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 20 }}>{active.name}</div>
+            <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16, wordBreak: "break-all" }}>{active.name}</div>
+
+            <ImportDetails imp={active} />
 
             <CandidateList json={active.candidates_json} onSelect={selectCandidate} form={form} />
 
@@ -117,7 +119,7 @@ export default function Review() {
                 <Input required placeholder="Title" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
                 <Input placeholder="Series (optional)" value={form.series} onChange={e => setForm(f => ({ ...f, series: e.target.value }))} />
                 <Input placeholder="Series # (optional)" value={form.series_seq} onChange={e => setForm(f => ({ ...f, series_seq: e.target.value }))} />
-                {error && <div style={{ color: "var(--clay)", fontSize: 13 }}>{error}</div>}
+                {error && <div style={{ color: "var(--danger-text)", fontSize: 13 }}>{error}</div>}
                 <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                   <Button type="submit" variant="success" disabled={submitting}>
                     {submitting ? "Importing..." : "Confirm & Import"}
@@ -129,6 +131,30 @@ export default function Review() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: "flex", gap: 10, fontSize: 12, padding: "3px 0" }}>
+      <span style={{ color: "var(--text-muted)", flexShrink: 0, minWidth: 90 }}>{label}</span>
+      <span className="mono" style={{ wordBreak: "break-all" }}>{value}</span>
+    </div>
+  );
+}
+
+function ImportDetails({ imp }: { imp: Import }) {
+  return (
+    <div style={{ marginBottom: 16, padding: "10px 12px", background: "var(--surface-hover)", borderRadius: "var(--radius-card)" }}>
+      <DetailRow label="Category" value={imp.category} />
+      <DetailRow label="Path" value={imp.content_path} />
+      <DetailRow label="Confidence" value={imp.metadata_confidence != null ? `${Math.round(imp.metadata_confidence * 100)}%` : "—"} />
+      <DetailRow label="ISBN" value={imp.isbn || "—"} />
+      <DetailRow label="ASIN" value={imp.asin || "—"} />
+      <DetailRow label="Hash" value={imp.hash || "—"} />
+      <DetailRow label="Added" value={new Date(imp.created_at).toLocaleString()} />
+      {imp.error_message && <DetailRow label="Error" value={imp.error_message} />}
     </div>
   );
 }
@@ -162,6 +188,7 @@ function ReviewCard({ imp, retrying, onReview, onRetry }: {
           {candidates.map((c, i) => (
             <CatalogCard key={i} compact tone="slate">
               <strong>{c.title}</strong> — {c.author}
+              {c.isbn && <span className="mono" style={{ color: "var(--text-muted)", fontSize: 11, marginLeft: 6 }}>{c.isbn}</span>}
               <span className="mono" style={{ color: "var(--text-muted)", marginLeft: 6 }}>{Math.round(c.score * 100)}%</span>
             </CatalogCard>
           ))}
@@ -189,6 +216,7 @@ function CandidateList({ json, onSelect, form }: {
                 <span>
                   <strong>{c.title}</strong> — {c.author}
                   {c.series && <span style={{ color: "var(--text-muted)" }}> ({c.series} #{c.series_seq})</span>}
+                  {c.isbn && <span className="mono" style={{ color: "var(--text-muted)", fontSize: 11, marginLeft: 6 }}>{c.isbn}</span>}
                   <span className="mono" style={{ color: "var(--text-muted)", fontSize: 11, marginLeft: 6 }}>[{c.source}/{c.match_method}]</span>
                 </span>
                 <span className="mono" style={{ color: "var(--text-muted)", flexShrink: 0 }}>{Math.round(c.score * 100)}%</span>

@@ -1,0 +1,57 @@
+/* Reading Room token system.
+   Theme-invariant constants live once on :root. Theme-varying tokens are
+   defined for light (the :root default) and overridden under
+   :root[data-theme="dark"]. The nav is intentionally theme-invariant (a
+   catalog cabinet is dark lacquered wood regardless of the room's daylight)
+   -- see nav-* below, not split per theme. */
+
+:root {
+  /* accent palette -- fixed in both themes */
+  --brass: #a9772e;
+  --moss: #3d5a47;
+  --clay: #9c4a32;
+  --slate: #5b6660;
+
+  /* base hues, referenced by the theme-varying tokens below */
+  --ink: #1b211e;
+  --ledger: #e7e2d2;
+
+  /* type */
+  --font-display: "Fraunces Variable", Georgia, serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* shape / shadow */
+  --radius-card: 3px;
+  --shadow-stamp-inset: inset 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 -1px 1px rgba(255, 255, 255, 0.05);
+
+  /* nav -- fixed dark drawer-front treatment, independent of light/dark toggle */
+  --nav-bg: linear-gradient(165deg, #23291f 0%, #1b211e 100%);
+  --nav-bg-active: color-mix(in srgb, var(--brass) 100%, transparent 85%);
+  --nav-text: #9ca79e;
+  --nav-text-active: var(--ledger);
+  --nav-border-active: var(--brass);
+
+  /* theme-varying: light (default) */
+  --bg: var(--ledger);
+  --text: var(--ink);
+  --text-muted: var(--slate);
+  --surface: color-mix(in srgb, var(--ledger) 100%, white 40%);
+  --surface-hover: color-mix(in srgb, var(--ledger) 100%, white 25%);
+  --border: color-mix(in srgb, var(--slate) 100%, transparent 65%);
+  --warning-bg: color-mix(in srgb, var(--clay) 100%, transparent 85%);
+  --warning-text: var(--clay);
+  --shadow-card: 0 1px 3px rgba(27, 33, 30, 0.15);
+}
+
+:root[data-theme="dark"] {
+  --bg: var(--ink);
+  --text: var(--ledger);
+  --text-muted: var(--slate);
+  --surface: color-mix(in srgb, var(--ink) 100%, white 8%);
+  --surface-hover: color-mix(in srgb, var(--ink) 100%, white 14%);
+  --border: color-mix(in srgb, var(--slate) 100%, transparent 55%);
+  --warning-bg: color-mix(in srgb, var(--clay) 100%, transparent 85%);
+  --warning-text: color-mix(in srgb, var(--clay) 100%, white 35%);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+}

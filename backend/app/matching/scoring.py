@@ -30,6 +30,51 @@ _SUMMARY_TITLE_RE = re.compile(
 # so gaps surface in production rather than staying invisible.
 _BLOCKED_PUBLISHERS = {"irb media", "wizer", "bookhabits", "bn publishing"}
 
+# Catches box sets/omnibuses/bundles beating the single book they contain
+# (e.g. a "Pittacus Lore" download matching "Pittacus Lore Box Set", or a
+# lone "Death's End" matching a "Set of 4 Books" bundle candidate). Not
+# anchored to start/end since these markers show up anywhere in the title
+# ("The Wayward Pines 3-in-1 Collection", "5 Books Set By Sarah J. Maas").
+# Covers both "set of N books" and the reversed "N books set" ordering seen
+# in real listings.
+_COLLECTION_TITLE_RE = re.compile(
+    r"\b(collection|box\s*set|boxed\s*set|omnibus|bundle|\d+[\s-]in[\s-]1"
+    r"|set\s+of\s+\d+\s+books|\d+\s+books?\s+set)\b",
+    re.IGNORECASE,
+)
+
+
+def is_unwanted_collection_candidate(candidate: dict, parsed: dict) -> bool:
+    """True if the candidate looks like a box set/omnibus/bundle but the
+    filename itself gave no indication the download actually is one --
+    i.e. this is a single book matching the compilation that contains it,
+    not someone's real box set download."""
+    if not _COLLECTION_TITLE_RE.search(candidate.get("title", "")):
+        return False
+    return not _COLLECTION_TITLE_RE.search(parsed.get("title", ""))
+
+
+# Derivative works ABOUT a book/author rather than the book itself --
+# trivia/quiz-book cash-ins and biographies-of-the-author beating the real
+# single-author novel they're piggybacking on (verified real false
+# positives: a "Witcher Series" download matching a "Witcher Series TRIVIA
+# QUIZ BOOK", and a lone "Burgess, Anthony" matching "The real life of
+# Anthony Burgess", a biography by a different author entirely). "life of"
+# requires "real" so it doesn't catch legitimate titles like "Life of Pi".
+_DERIVATIVE_WORK_RE = re.compile(
+    r"\b(trivia|quiz\s+book|quiz\s+questions|the\s+real\s+life\s+of|biography\s+of)\b",
+    re.IGNORECASE,
+)
+
+
+def is_derivative_work_candidate(candidate: dict, parsed: dict) -> bool:
+    """True if the candidate looks like trivia/quiz-book/biography content
+    about a book or author rather than the work itself, and the filename
+    gave no indication that's actually what was downloaded."""
+    if not _DERIVATIVE_WORK_RE.search(candidate.get("title", "")):
+        return False
+    return not _DERIVATIVE_WORK_RE.search(parsed.get("title", ""))
+
 
 def is_summary_mill_candidate(candidate: dict) -> bool:
     """True if this looks like a study-guide/summary-mill product rather
@@ -79,6 +124,18 @@ def filter_candidates(candidates: list, parsed: dict) -> list:
             current_app.logger.info(
                 f"Disqualified series_seq conflict: candidate={c.get('series_seq')!r} "
                 f"parsed={parsed.get('series_seq')!r} for {c.get('title')!r}"
+            )
+            continue
+        if is_unwanted_collection_candidate(c, parsed):
+            current_app.logger.info(
+                f"Disqualified box set/omnibus candidate: {c.get('title')!r} for "
+                f"unrelated single-book download {parsed.get('title')!r}"
+            )
+            continue
+        if is_derivative_work_candidate(c, parsed):
+            current_app.logger.info(
+                f"Disqualified trivia/biography candidate: {c.get('title')!r} for "
+                f"unrelated download {parsed.get('title')!r}"
             )
             continue
         kept.append(c)

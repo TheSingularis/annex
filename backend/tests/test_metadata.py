@@ -260,6 +260,17 @@ def test_title_score_partial_overlap_still_dampened():
     assert score < 0.85
 
 
+def test_title_score_containment_boost_can_be_disabled():
+    # containment_boost=False opts a caller out of the full-containment
+    # relief entirely, falling back to the older proportional dampening --
+    # used by the whole_title retry, which can't independently verify the
+    # author (see its call site in _resolve_from_parsed).
+    boosted = metadata._title_score("The Dark Tower I The Gunslinger", "Dark Tower I")
+    unboosted = metadata._title_score("The Dark Tower I The Gunslinger", "Dark Tower I", containment_boost=False)
+    assert unboosted < boosted
+    assert unboosted < 0.85
+
+
 # --- hard disqualification: summary-mill matches, series_seq conflicts (Phase 3) ---
 # Unit tests for app.matching.scoring live in tests/matching/test_scoring.py. These
 # integration tests prove the wiring point in resolve_metadata actually intercepts a
@@ -639,25 +650,41 @@ def test_prose_low_confidence_retries_whole_title_when_split_guess_is_wrong(app,
     assert result["match"]["match_method"] == "whole_title"
 
 
-def test_whole_title_retry_vetoes_candidate_with_clearly_wrong_author(app, monkeypatch):
-    # Regression: the whole_title retry deliberately blanks the author when
-    # scoring (see comment at its call site) so a wrong author/title split
-    # guess can't tank an otherwise-correct match -- but that also means a
-    # same-titled book by a genuinely different author can win on title
-    # containment alone. Real false positive: a "Tomorrow and Tomorrow and
-    # Tomorrow" (Gabrielle Zevin) download matching Tom Sweterlitsch's
-    # unrelated same-named novel.
-    wrong_author_candidate = {
-        "score": 0.75, "title": "Tomorrow and Tomorrow",
-        "author": "Tom Sweterlitsch", "series": "", "series_seq": "", "source": "openlibrary",
-    }
-
+@pytest.mark.parametrize("name,wrong_author_candidate", [
+    # Real false positive #1: whole_title's title-containment boost let a
+    # same-titled book by a completely different author win, since that
+    # branch deliberately blanks the author when scoring (see comment at its
+    # call site) so a wrong author/title split guess can't tank an
+    # otherwise-correct match. A "Tomorrow and Tomorrow and Tomorrow"
+    # (Gabrielle Zevin) download matched Tom Sweterlitsch's unrelated
+    # same-named novel.
+    (
+        "Tomorrow and Tomorrow and Tomorrow - Gabrielle Zevin",
+        {"title": "Tomorrow and Tomorrow", "author": "Tom Sweterlitsch",
+         "series": "", "series_seq": "", "source": "openlibrary"},
+    ),
+    # Real false positive #2, and the reason this scoped to containment_boost
+    # instead of an author-similarity veto: an author-similarity check can't
+    # reliably tell "Robert Lawrence Stine" vs "Jenika Snow" (wrong book,
+    # 0.31 similarity) apart from a real pen name like Katherine
+    # Addison/Sarah Monette (0.33 similarity) -- same ballpark, opposite
+    # correctness. "The Beast" by Jenika Snow matched R.L. Stine's unrelated
+    # same-titled "The Beast" once the containment boost applied.
+    (
+        "The Beast - Jenika Snow",
+        {"title": "The Beast", "author": "Robert Lawrence Stine",
+         "series": "", "series_seq": "", "source": "openlibrary"},
+    ),
+])
+def test_whole_title_retry_does_not_let_wrong_author_win_on_title_containment_alone(
+    app, monkeypatch, name, wrong_author_candidate
+):
     def fake_search_and_score(author, title, category, is_comic=False, match_method="primary", score_author=None):
-        return [{**wrong_author_candidate, "match_method": match_method}]
+        return [{**wrong_author_candidate, "score": 0.75, "match_method": match_method}]
 
     monkeypatch.setattr(metadata, "_search_and_score", fake_search_and_score)
 
-    result = metadata.resolve_metadata("Tomorrow and Tomorrow and Tomorrow - Gabrielle Zevin", "ebook")
+    result = metadata.resolve_metadata(name, "ebook")
 
     assert result["match"] is None
 

@@ -305,13 +305,23 @@ def _assign_author_title(left: str, right: str) -> dict:
 
 # --- Scoring ---
 
-def _title_score(parsed_title: str, candidate_title: str) -> float:
+def _title_score(parsed_title: str, candidate_title: str, containment_boost: bool = True) -> float:
     """
     Blend token_sort_ratio and token_set_ratio.
     token_set_ratio handles the case where the parsed title contains the real
     title plus subtitle noise from the filename.  We dampen it when the
     candidate is much shorter than the parsed title to avoid false positives
     from short candidates matching by coincidence.
+
+    containment_boost: set False by callers that can't also verify the
+    author (see _score's `whole_title` caller in _resolve_from_parsed) --
+    full title-word containment alone isn't a safe enough signal without
+    that second check (verified real false positive: a "The Beast" by
+    Jenika Snow download matching R.L. Stine's unrelated same-titled "The
+    Beast" at 0.925 once the boost applied with no author check backing it
+    up; author-similarity string metrics can't reliably tell that apart
+    from a legitimate pen name like Katherine Addison/Sarah Monette, whose
+    similarity score lands right next to the wrong-book case's).
     """
     a = _normalize_candidate_title(candidate_title)
     b = parsed_title  # already cleaned
@@ -335,15 +345,15 @@ def _title_score(parsed_title: str, candidate_title: str) -> float:
     # stronger signal than a partial word overlap, so barely dampen it.
     # Partial overlaps (set_s < 1.0) keep the harsher proportional dampening
     # to avoid false positives from short candidates matching by coincidence.
-    if set_s == 1.0:
+    if set_s == 1.0 and containment_boost:
         blended_set = 0.85 + 0.15 * length_ratio
     else:
         blended_set = set_s * (0.5 + 0.5 * length_ratio)
     return max(sort_s, blended_set)
 
 
-def _score(candidate: dict, parsed: dict) -> float:
-    title_s = _title_score(parsed.get("title", ""), candidate.get("title", ""))
+def _score(candidate: dict, parsed: dict, containment_boost: bool = True) -> float:
+    title_s = _title_score(parsed.get("title", ""), candidate.get("title", ""), containment_boost=containment_boost)
     author = parsed.get("author", "")
 
     # When no author was parsed from the filename, use 100% title weight.
@@ -769,22 +779,27 @@ def _resolve_from_parsed(parsed: dict, category: str, is_comic: bool) -> dict:
             whole_title = f"{parsed['author']} {parsed['title']}".strip()
             as_whole = sorted(
                 [
-                    {**c, "score": _score(c, {"author": "", "title": whole_title}), "match_method": "whole_title"}
+                    # containment_boost=False: this branch's scoring deliberately
+                    # blanks the author (below) so a coincidentally
+                    # title-matching book by a completely different author can
+                    # still win -- that's the point of this branch (real filenames
+                    # like "English Title - Native Title" have no author anywhere
+                    # to check against). Combining that with the containment boost
+                    # is what caused a real false positive (see _title_score's
+                    # docstring), so this call site alone opts out of it.
+                    # An author-similarity veto was tried here and reverted: it
+                    # broke this branch's own legitimate no-real-author case
+                    # (verified: a real pen name pair and a real wrong-author pair
+                    # scored 0.33 vs 0.31 -- indistinguishable noise, not a usable
+                    # signal). containment_boost=False alone keeps both known false
+                    # positives (the Stine/Snow "Beast" case and the Sweterlitsch/
+                    # Zevin "Tomorrow" case) safely under threshold without it.
+                    {
+                        **c,
+                        "score": _score(c, {"author": "", "title": whole_title}, containment_boost=False),
+                        "match_method": "whole_title",
+                    }
                     for c in scored
-                    # Scoring above deliberately blanks the author (see comment
-                    # above) so a coincidentally title-matching book by a
-                    # completely different author can still win here -- that's
-                    # the point of this branch. But veto the clear-disagreement
-                    # case: a candidate with its own author on record that
-                    # plainly isn't the filename's author is almost certainly a
-                    # different, same-named book (verified real false positive:
-                    # a "Tomorrow and Tomorrow and Tomorrow" by Gabrielle Zevin
-                    # download matching Tom Sweterlitsch's unrelated same-named
-                    # novel). Loose threshold (0.3, not "must agree") so this
-                    # only blocks plain contradictions, not pen names/name
-                    # variants that legitimately score low on string similarity.
-                    if not c.get("author")
-                    or fuzz.token_set_ratio(c.get("author", ""), parsed["author"]) / 100 >= 0.3
                 ],
                 key=lambda x: x["score"],
                 reverse=True,

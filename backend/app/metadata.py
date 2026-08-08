@@ -326,9 +326,19 @@ def _title_score(parsed_title: str, candidate_title: str) -> float:
     if min(a_words, b_words) < 2:
         return sort_s
 
-    # Dampen set_ratio proportionally when lengths differ significantly
     length_ratio = min(a_words, b_words) / max(a_words, b_words)
-    blended_set = set_s * (0.5 + 0.5 * length_ratio)
+
+    # set_s == 1.0 means every word of the shorter title appears verbatim in
+    # the longer one -- the mismatch is pure appended/prepended noise (a
+    # series descriptor, subtitle, or edition tag the filename or the API
+    # added) rather than genuinely different content. That's a much
+    # stronger signal than a partial word overlap, so barely dampen it.
+    # Partial overlaps (set_s < 1.0) keep the harsher proportional dampening
+    # to avoid false positives from short candidates matching by coincidence.
+    if set_s == 1.0:
+        blended_set = 0.85 + 0.15 * length_ratio
+    else:
+        blended_set = set_s * (0.5 + 0.5 * length_ratio)
     return max(sort_s, blended_set)
 
 
@@ -761,6 +771,20 @@ def _resolve_from_parsed(parsed: dict, category: str, is_comic: bool) -> dict:
                 [
                     {**c, "score": _score(c, {"author": "", "title": whole_title}), "match_method": "whole_title"}
                     for c in scored
+                    # Scoring above deliberately blanks the author (see comment
+                    # above) so a coincidentally title-matching book by a
+                    # completely different author can still win here -- that's
+                    # the point of this branch. But veto the clear-disagreement
+                    # case: a candidate with its own author on record that
+                    # plainly isn't the filename's author is almost certainly a
+                    # different, same-named book (verified real false positive:
+                    # a "Tomorrow and Tomorrow and Tomorrow" by Gabrielle Zevin
+                    # download matching Tom Sweterlitsch's unrelated same-named
+                    # novel). Loose threshold (0.3, not "must agree") so this
+                    # only blocks plain contradictions, not pen names/name
+                    # variants that legitimately score low on string similarity.
+                    if not c.get("author")
+                    or fuzz.token_set_ratio(c.get("author", ""), parsed["author"]) / 100 >= 0.3
                 ],
                 key=lambda x: x["score"],
                 reverse=True,

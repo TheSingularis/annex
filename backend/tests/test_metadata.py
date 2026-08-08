@@ -238,6 +238,28 @@ def test_score_does_not_penalize_extra_author_credits():
     assert metadata._score(candidate, parsed) >= 0.85
 
 
+def test_title_score_trusts_full_word_containment_over_length_ratio():
+    # Regression: real filenames routinely tack a series descriptor onto the
+    # title with no punctuation separator ("The Dark Tower I The Gunslinger"),
+    # which the old proportional length-ratio dampening alone punished hard
+    # enough to keep an obviously-correct match stuck in needs_review (0.838,
+    # below the 0.85 threshold) even with a perfect author match. Every word
+    # of the candidate appearing verbatim in the parsed title is a much
+    # stronger signal than the length gap alone.
+    score = metadata._title_score("The Dark Tower I The Gunslinger", "Dark Tower I")
+    assert score >= 0.9
+
+
+def test_title_score_partial_overlap_still_dampened():
+    # Contrast case: candidate words are NOT fully contained in the parsed
+    # title (this is a different, unrelated product), so the old harsher
+    # dampening should still apply -- this must stay well below threshold.
+    score = metadata._title_score(
+        "Rebecca by Daphne du Maurier", "Daphne du Maurier: The BBC Radio Collection"
+    )
+    assert score < 0.85
+
+
 # --- hard disqualification: summary-mill matches, series_seq conflicts (Phase 3) ---
 # Unit tests for app.matching.scoring live in tests/matching/test_scoring.py. These
 # integration tests prove the wiring point in resolve_metadata actually intercepts a
@@ -615,6 +637,29 @@ def test_prose_low_confidence_retries_whole_title_when_split_guess_is_wrong(app,
     assert result["match"] is not None
     assert result["match"]["author"] == "Mo Xiang Tong Xiu"
     assert result["match"]["match_method"] == "whole_title"
+
+
+def test_whole_title_retry_vetoes_candidate_with_clearly_wrong_author(app, monkeypatch):
+    # Regression: the whole_title retry deliberately blanks the author when
+    # scoring (see comment at its call site) so a wrong author/title split
+    # guess can't tank an otherwise-correct match -- but that also means a
+    # same-titled book by a genuinely different author can win on title
+    # containment alone. Real false positive: a "Tomorrow and Tomorrow and
+    # Tomorrow" (Gabrielle Zevin) download matching Tom Sweterlitsch's
+    # unrelated same-named novel.
+    wrong_author_candidate = {
+        "score": 0.75, "title": "Tomorrow and Tomorrow",
+        "author": "Tom Sweterlitsch", "series": "", "series_seq": "", "source": "openlibrary",
+    }
+
+    def fake_search_and_score(author, title, category, is_comic=False, match_method="primary", score_author=None):
+        return [{**wrong_author_candidate, "match_method": match_method}]
+
+    monkeypatch.setattr(metadata, "_search_and_score", fake_search_and_score)
+
+    result = metadata.resolve_metadata("Tomorrow and Tomorrow and Tomorrow - Gabrielle Zevin", "ebook")
+
+    assert result["match"] is None
 
 
 def test_resolve_metadata_fills_series_from_filename(app, http_mock):

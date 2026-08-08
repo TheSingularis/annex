@@ -39,6 +39,57 @@ def test_is_summary_mill_candidate_real_author_not_flagged():
     assert not scoring.is_summary_mill_candidate(candidate)
 
 
+# --- is_unwanted_collection_candidate ---
+
+@pytest.mark.parametrize("title", [
+    "Pittacus Lore Box Set",
+    "The Wayward Pines 3-in-1 Collection",
+    "Cixin Liu Bestselling Collecting Books Series, Set of 4 Books",
+    "Throne Of Glass Series Collection 5 Books Set By Sarah J. Maas",
+    "Mickey7 Series, 2 Books Set",
+])
+def test_is_unwanted_collection_candidate_title_pattern(title):
+    candidate = {"title": title}
+    assert scoring.is_unwanted_collection_candidate(candidate, {"title": "Death's End"})
+
+
+def test_is_unwanted_collection_candidate_not_flagged_when_filename_is_actually_a_collection():
+    # The download genuinely is a compilation -- don't disqualify the
+    # matching compilation candidate in that case.
+    candidate = {"title": "Jim Butcher's the Dresden Files Collection"}
+    parsed = {"title": "The Dresden Files 1-15 + Side Jobs Collection"}
+    assert not scoring.is_unwanted_collection_candidate(candidate, parsed)
+
+
+def test_is_unwanted_collection_candidate_real_single_book_not_flagged():
+    candidate = {"title": "Dark Rise"}
+    assert not scoring.is_unwanted_collection_candidate(candidate, {"title": "Dark Rise"})
+
+
+# --- is_derivative_work_candidate ---
+
+@pytest.mark.parametrize("title", [
+    "Witcher Series TRIVIA QUIZ BOOK",
+    "The Real Life of Anthony Burgess",
+    "Atomic Habits Quiz Questions",
+])
+def test_is_derivative_work_candidate_title_pattern(title):
+    candidate = {"title": title}
+    assert scoring.is_derivative_work_candidate(candidate, {"title": "Something Else"})
+
+
+def test_is_derivative_work_candidate_does_not_flag_life_of_pi():
+    # "life of" alone (without "real") is too broad -- would false-positive
+    # on real titles like "Life of Pi".
+    candidate = {"title": "Life of Pi"}
+    assert not scoring.is_derivative_work_candidate(candidate, {"title": "Life of Pi"})
+
+
+def test_is_derivative_work_candidate_real_book_not_flagged():
+    candidate = {"title": "Witcher Series"}
+    assert not scoring.is_derivative_work_candidate(candidate, {"title": "Witcher Series"})
+
+
 # --- series_seq_conflicts ---
 
 def test_series_seq_conflicts_true_for_different_numbers():

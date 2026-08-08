@@ -49,9 +49,21 @@ def is_unwanted_collection_candidate(candidate: dict, parsed: dict) -> bool:
     filename itself gave no indication the download actually is one --
     i.e. this is a single book matching the compilation that contains it,
     not someone's real box set download."""
-    if not _COLLECTION_TITLE_RE.search(candidate.get("title", "")):
+    candidate_title = candidate.get("title", "")
+    parsed_title = parsed.get("title", "")
+
+    # Real false positive: a single "Throne of Glass" book 1 download
+    # matched a candidate literally titled "The Assassin's Blade / Throne of
+    # Glass / Crown of Midnight / ... / Kingdom of Ash" -- OpenLibrary/Google
+    # Books sometimes list an entire series as one slash-joined title with no
+    # "collection"/"box set" wording at all. 2+ slashes (3+ segments) isn't
+    # something a real single-book title does.
+    if candidate_title.count(" / ") >= 2:
+        return parsed_title.count(" / ") < 2
+
+    if not _COLLECTION_TITLE_RE.search(candidate_title):
         return False
-    return not _COLLECTION_TITLE_RE.search(parsed.get("title", ""))
+    return not _COLLECTION_TITLE_RE.search(parsed_title)
 
 
 # Derivative works ABOUT a book/author rather than the book itself --

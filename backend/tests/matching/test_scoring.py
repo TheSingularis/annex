@@ -66,6 +66,17 @@ def test_is_unwanted_collection_candidate_real_single_book_not_flagged():
     assert not scoring.is_unwanted_collection_candidate(candidate, {"title": "Dark Rise"})
 
 
+def test_is_unwanted_collection_candidate_slash_joined_series_listing():
+    # Real false positive: a single "Throne of Glass" book 1 download
+    # matched a candidate whose title is the entire 8-book series
+    # slash-joined -- no "collection"/"box set" wording, just structure.
+    candidate = {
+        "title": "The Assassin's Blade / Throne of Glass / Crown of Midnight / "
+                  "Heir of Fire / Queen of Shadows / Empire of Storms / Tower of Dawn / Kingdom of Ash"
+    }
+    assert scoring.is_unwanted_collection_candidate(candidate, {"title": "Throne of Glass"})
+
+
 # --- is_derivative_work_candidate ---
 
 @pytest.mark.parametrize("title", [

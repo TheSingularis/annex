@@ -52,11 +52,6 @@ class Import(db.Model):
     candidates_json = db.Column(db.Text, nullable=True)  # JSON top-3 candidates
     error_message = db.Column(db.Text, nullable=True)
 
-    # Backfilled from the old resolver's already-computed match data (see
-    # app.matching Phase 4a) -- zero new behavior, just persisting a value
-    # that was previously discarded. asin has no live producer yet (only the
-    # still-unwired app.matching.resolution path sets it) and stays NULL
-    # until the Phase 4b cutover.
     isbn = db.Column(db.Text, nullable=True)
     asin = db.Column(db.Text, nullable=True)
 
@@ -87,45 +82,4 @@ class Import(db.Model):
             "asin": self.asin,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-        }
-
-
-class ShadowMatch(db.Model):
-    """Phase 4a observation record: the new matcher's (app.matching.orchestrator)
-    output for a live import, alongside what the old resolver actually decided.
-    Never read by any real import decision -- purely for offline comparison
-    during the shadow-mode window. See
-    /root/.claude/plans/jolly-greeting-karp.md (Phase 4a)."""
-
-    __tablename__ = "shadow_matches"
-
-    id = db.Column(db.Integer, primary_key=True)
-    import_id = db.Column(db.Integer, db.ForeignKey("imports.id"), nullable=False)
-
-    old_confidence = db.Column(db.Float, nullable=True)
-    old_match_json = db.Column(db.Text, nullable=True)
-
-    new_confidence = db.Column(db.Float, nullable=True)
-    new_match_json = db.Column(db.Text, nullable=True)
-    new_candidates_json = db.Column(db.Text, nullable=True)
-
-    # Coarse title/author string comparison -- good enough for a human to
-    # skim disagreements, not a precision metric.
-    agrees = db.Column(db.Boolean, nullable=True)
-    error = db.Column(db.Text, nullable=True)  # set if the new resolver raised
-
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "import_id": self.import_id,
-            "old_confidence": self.old_confidence,
-            "old_match_json": self.old_match_json,
-            "new_confidence": self.new_confidence,
-            "new_match_json": self.new_match_json,
-            "new_candidates_json": self.new_candidates_json,
-            "agrees": self.agrees,
-            "error": self.error,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
         }

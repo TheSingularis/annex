@@ -27,8 +27,7 @@ def db_app():
     """Like `app`, but backed by a real in-memory SQLite DB (db.create_all()
     run inside the app context). First DB-backed fixture in this suite --
     the plain `app` fixture above explicitly promises no DB touch, so tests
-    that read/write Import/ShadowMatch rows (Phase 4a's migration, shadow
-    task, and summary route) use this one instead.
+    that read/write Import rows use this one instead.
     """
     flask_app = create_app(config_class=_TestConfig)
     with flask_app.app_context():

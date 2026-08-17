@@ -8,9 +8,8 @@ from celery.signals import worker_ready
 from flask import current_app
 
 from app import celery, db
-from app.models import Import, ShadowMatch
+from app.models import Import
 from app.abs import ABSClient
-from app.metadata import resolve_metadata
 from app.matching.orchestrator import resolve_metadata_v2
 from app.fileops import discover_files, build_target_dir, hardlink_files, is_comic
 
@@ -18,11 +17,6 @@ logger = logging.getLogger(__name__)
 
 # Minimum seconds since last modification before a path is considered stable
 FILE_STABILITY_SECONDS = 60
-
-# How long to wait before running the shadow-mode resolver, so its Audible
-# request doesn't land immediately after the real import's own Audible call
-# for the same title.
-SHADOW_MATCH_DELAY_SECONDS = 30
 
 
 def _is_stable(path: Path) -> bool:
@@ -38,20 +32,6 @@ def _strip_raw(candidate: dict | None) -> dict | None:
     if candidate is None:
         return None
     return {k: v for k, v in candidate.items() if k != "raw"}
-
-
-def _matches_agree(old_match: dict | None, new_match: dict | None) -> bool:
-    """Coarse title/author string comparison -- good enough for a human to
-    skim disagreements during the shadow-mode observation window, not a
-    precision metric."""
-    if old_match is None and new_match is None:
-        return True
-    if old_match is None or new_match is None:
-        return False
-    return (
-        old_match.get("title", "").strip().lower() == new_match.get("title", "").strip().lower()
-        and old_match.get("author", "").strip().lower() == new_match.get("author", "").strip().lower()
-    )
 
 
 def _dispatch_interleaved(ids_by_category: dict):
@@ -197,23 +177,14 @@ def _run_import(record: Import):
             logger.debug(f"Could not read file metadata: {e}")
 
     is_comic_file = is_comic(files)
-    result = resolve_metadata(
+    result = resolve_metadata_v2(
         record.name, record.category, hint_author=hint_author, is_comic=is_comic_file
     )
     record.metadata_confidence = result["confidence"]
     record.candidates_json = json.dumps([_strip_raw(c) for c in result["candidates"]])
-    record.isbn = (result["match"] or {}).get("isbn", "") or None
-
-    if current_app.config["SHADOW_MATCHER_ENABLED"]:
-        # Countdown, not .delay(): dispatching immediately re-queries the
-        # same Audible endpoint the real import above just hit, and Audible
-        # rate-limits back-to-back requests for the same title (see
-        # _search_audible's retry comment in app/metadata.py). Spacing it
-        # out reduces how often the shadow-only call gets rate-limited.
-        shadow_match_item.apply_async(
-            args=[record.id, result, hint_author, is_comic_file],
-            countdown=SHADOW_MATCH_DELAY_SECONDS,
-        )
+    match = result["match"] or {}
+    record.isbn = match.get("isbn", "") or None
+    record.asin = match.get("asin", "") or None
 
     if result["match"] is None:
         record.status = "needs_review"
@@ -256,40 +227,3 @@ def _finalize_import(record: Import, match: dict, files: list[Path]):
         ABSClient().scan_library(record.category)
     except Exception as e:
         logger.warning(f"ABS scan failed (import still succeeded): {e}")
-
-
-@celery.task(name="app.tasks.shadow_match_item")
-def shadow_match_item(import_id: int, old_result: dict, hint_author: str, is_comic_file: bool):
-    _run_shadow_match(import_id, old_result, hint_author, is_comic_file)
-
-
-def _run_shadow_match(import_id: int, old_result: dict, hint_author: str, is_comic_file: bool):
-    """Phase 4a: runs the new (still-unwired) resolver alongside the old
-    one's already-decided result and records both for offline comparison.
-    Dispatched fire-and-forget from _run_import so a slow API call or a bug
-    in the new resolver can never delay or break the real import -- this
-    function's own failures are caught and stored, never re-raised. See
-    /root/.claude/plans/jolly-greeting-karp.md (Phase 4a)."""
-    record = Import.query.get(import_id)
-    if not record:
-        return
-
-    shadow = ShadowMatch(
-        import_id=import_id,
-        old_confidence=old_result["confidence"],
-        old_match_json=json.dumps(_strip_raw(old_result["match"])),
-    )
-    try:
-        new_result = resolve_metadata_v2(
-            record.name, record.category, hint_author=hint_author, is_comic=is_comic_file
-        )
-        shadow.new_confidence = new_result["confidence"]
-        shadow.new_match_json = json.dumps(_strip_raw(new_result["match"]))
-        shadow.new_candidates_json = json.dumps([_strip_raw(c) for c in new_result["candidates"]])
-        shadow.agrees = _matches_agree(old_result["match"], new_result["match"])
-    except Exception as e:
-        shadow.error = str(e)
-        logger.exception(f"Shadow match failed for import {import_id}")
-
-    db.session.add(shadow)
-    db.session.commit()

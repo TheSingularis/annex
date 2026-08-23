@@ -5,7 +5,7 @@ from app import db
 from app.models import Import
 from app.tasks import import_item, _finalize_import
 from app.matching.orchestrator import resolve_metadata_v2
-from app.fileops import discover_files, is_comic
+from app.fileops import discover_files, is_comic, remove_linked_files
 
 imports_bp = Blueprint("imports", __name__)
 
@@ -173,12 +173,16 @@ def reset_import(import_id):
     Deliberately scoped to imported-only (not a general status editor) --
     added after a real false-positive batch (title_only retry matching a
     same-titled but wrong-author book) needed correcting via the API rather
-    than direct DB access. Does NOT remove the hardlinked file(s) already
-    written under the wrong target_path -- that still needs manual cleanup
-    on the media share."""
+    than direct DB access. Also removes the hardlinked file(s) this import
+    wrote under the wrong target_path, via linked_files_json -- records
+    imported before that field existed have no tracked files to remove, so
+    those still need manual cleanup on the media share."""
     record = Import.query.get_or_404(import_id)
     if record.status != "imported":
         return jsonify({"error": "Only imported records can be reset"}), 400
+
+    if record.linked_files_json:
+        remove_linked_files([Path(p) for p in json.loads(record.linked_files_json)])
 
     record.status = "needs_review"
     record.resolved_author = None
@@ -186,6 +190,7 @@ def reset_import(import_id):
     record.resolved_series = None
     record.resolved_series_seq = None
     record.target_path = None
+    record.linked_files_json = None
     # Clear the stale confident score/candidates too -- otherwise a record
     # read between reset and its next retry completing briefly shows the
     # old (wrong) confidence value, which looked like a live inconsistency

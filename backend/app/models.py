@@ -49,6 +49,12 @@ class Import(db.Model):
     resolved_series = db.Column(db.Text, nullable=True)
     resolved_series_seq = db.Column(db.Text, nullable=True)
     target_path = db.Column(db.Text, nullable=True)
+    # JSON list of the exact file paths hardlink_files() created for this
+    # import -- lets reset_import() undo the on-disk footprint precisely,
+    # instead of guessing from target_path (a directory that may be shared
+    # with unrelated content). Null for records imported before this field
+    # existed; reset falls back to DB-only cleanup for those.
+    linked_files_json = db.Column(db.Text, nullable=True)
     candidates_json = db.Column(db.Text, nullable=True)  # JSON top-3 candidates
     error_message = db.Column(db.Text, nullable=True)
 
@@ -76,6 +82,7 @@ class Import(db.Model):
             "resolved_series": self.resolved_series,
             "resolved_series_seq": self.resolved_series_seq,
             "target_path": self.target_path,
+            "linked_files_json": self.linked_files_json,
             "candidates_json": self.candidates_json,
             "error_message": self.error_message,
             "isbn": self.isbn,

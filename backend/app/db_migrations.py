@@ -6,7 +6,7 @@ table schema.
 
 SQLite-specific (PRAGMA table_info) by design, matching the existing
 hand-rolled, no-abstraction precedent in app_settings.py -- not building
-generic multi-DB migration tooling for one column pair. See
+generic multi-DB migration tooling for a handful of columns. See
 /root/.claude/plans/jolly-greeting-karp.md (Phase 4a).
 """
 from sqlalchemy import text
@@ -18,6 +18,7 @@ from app import db
 _PENDING_COLUMNS = [
     ("imports", "isbn", "TEXT"),
     ("imports", "asin", "TEXT"),
+    ("imports", "linked_files_json", "TEXT"),
 ]
 
 

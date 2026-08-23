@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from app import db, tasks
@@ -73,3 +74,18 @@ def test_finalize_import_marks_failed_when_nothing_newly_linked(db_app, monkeypa
     assert record.status == "failed"
     assert "already exists" in record.error_message
     assert record.target_path is None
+
+
+def test_finalize_import_persists_linked_files_json(db_app, monkeypatch):
+    record = _make_import()
+    monkeypatch.setattr(tasks, "build_target_dir", lambda **k: Path("/tmp/target"))
+    monkeypatch.setattr(
+        tasks, "hardlink_files",
+        lambda files, target_dir, title: [Path("/tmp/target/Dune.epub")],
+    )
+
+    tasks._finalize_import(
+        record, {"author": "Frank Herbert", "title": "Dune"}, [Path("/tmp/fake.epub")]
+    )
+
+    assert json.loads(record.linked_files_json) == ["/tmp/target/Dune.epub"]

@@ -220,6 +220,7 @@ def _finalize_import(record: Import, match: dict, files: list[Path]):
         return
 
     record.target_path = str(target_dir)
+    record.linked_files_json = json.dumps([str(p) for p in linked])
     record.status = "imported"
     db.session.commit()
 

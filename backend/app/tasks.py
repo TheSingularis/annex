@@ -1,5 +1,6 @@
 import json
 import logging
+import tempfile
 import time
 from itertools import zip_longest
 from pathlib import Path
@@ -13,6 +14,7 @@ from app.abs import ABSClient
 from app.metadata import resolve_metadata
 from app.matching.orchestrator import resolve_metadata_v2
 from app.fileops import discover_files, build_target_dir, hardlink_files, is_comic
+from app.ebook_convert import select_ebook_source, needs_conversion, convert_to_epub, EbookConversionError
 
 logger = logging.getLogger(__name__)
 
@@ -237,7 +239,25 @@ def _finalize_import(record: Import, match: dict, files: list[Path]):
         series_seq=match.get("series_seq", ""),
     )
 
-    linked = hardlink_files(files, target_dir, match["title"])
+    if record.category == "ebook" and current_app.config["EBOOK_CONVERT_ENABLED"]:
+        chosen, passthrough = select_ebook_source(files)
+        if chosen is not None and needs_conversion(chosen):
+            try:
+                with tempfile.TemporaryDirectory(prefix="annex-ebook-convert-") as tmp:
+                    epub_path = convert_to_epub(chosen, Path(tmp))
+                    linked = hardlink_files([epub_path] + passthrough, target_dir, match["title"])
+            except EbookConversionError as e:
+                record.status = "failed"
+                record.error_message = f"Ebook conversion failed: {e}"
+                db.session.commit()
+                return
+        elif chosen is not None:
+            linked = hardlink_files([chosen] + passthrough, target_dir, match["title"])
+        else:
+            linked = hardlink_files(files, target_dir, match["title"])
+    else:
+        linked = hardlink_files(files, target_dir, match["title"])
+
     if not linked:
         # Every target already existed (e.g. two different downloads
         # resolving to the same title) -- nothing was actually added to the

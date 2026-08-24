@@ -15,7 +15,12 @@ ENV GIT_SHA=${GIT_SHA}
 RUN apt-get update && apt-get install -y --no-install-recommends \
     redis-server \
     supervisor \
+    calibre \
     && rm -rf /var/lib/apt/lists/*
+
+# Calibre's ebook-convert is a Qt app; force the offscreen platform plugin
+# so it runs headless without an X server (see app/ebook_convert.py).
+ENV QT_QPA_PLATFORM=offscreen
 
 WORKDIR /app
 

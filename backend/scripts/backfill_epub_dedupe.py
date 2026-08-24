@@ -1,9 +1,17 @@
 """
-One-off backfill: scans EBOOK_LIBRARY_PATH for already-imported folders that
-contain more than one ebook-format file (the pre-fix behavior hardlinked
-every discovered file), and collapses each down to a single canonical
-EPUB, using the same selection/conversion rules as the live import pipeline
-(app.ebook_convert).
+One-off backfill: scans EBOOK_LIBRARY_PATH for already-imported books that
+have more than one ebook-format file for the *same title* (the pre-fix
+behavior hardlinked every discovered format as siblings), and collapses each
+down to a single canonical EPUB, using the same selection/conversion rules
+as the live import pipeline (app.ebook_convert).
+
+Grouping is by filename stem (name minus extension) within a folder, NOT by
+"folder has >1 ebook file" -- some library folders legitimately hold several
+different books (an anthology, a whole series dumped in one directory from
+before Annex existed), and treating every file in such a folder as an
+interchangeable format of "the" book would delete other people's titles, not
+just format duplicates. Only files that share an exact stem are ever
+candidates to collapse together.
 
 Not a Celery task, not scheduled, not exposed via any API route --
 intentionally a manual, run-it-yourself operation.
@@ -28,20 +36,25 @@ from app.fileops import sanitize
 _FORMAT_EXTENSIONS = {".epub", ".azw3", ".mobi"}
 
 
-def find_candidate_folders(library_root: Path):
-    """Yields (folder, files) for every folder directly containing more than
-    one file whose extension is in _FORMAT_EXTENSIONS -- these are the
-    folders where the pre-fix pipeline linked every format as siblings."""
+def find_candidate_groups(library_root: Path):
+    """Yields (folder, group_files) for every same-stem group of >1 file
+    within a folder -- i.e. true format duplicates of one title (same
+    filename, different extension), never files that merely happen to share
+    a folder with a different title."""
     for folder in sorted(p for p in library_root.rglob("*") if p.is_dir()):
-        files = sorted(
+        files = [
             f for f in folder.iterdir()
             if f.is_file() and f.suffix.lower() in _FORMAT_EXTENSIONS
-        )
-        if len(files) > 1:
-            yield folder, files
+        ]
+        groups: dict[str, list[Path]] = {}
+        for f in files:
+            groups.setdefault(f.stem.lower(), []).append(f)
+        for group_files in groups.values():
+            if len(group_files) > 1:
+                yield folder, sorted(group_files)
 
 
-def process_folder(folder: Path, files: list[Path], dry_run: bool) -> dict:
+def process_group(folder: Path, files: list[Path], dry_run: bool) -> dict:
     chosen, passthrough = select_ebook_source(files)
     if chosen is None:
         return {"folder": str(folder), "action": "skip-no-ebook-format"}
@@ -57,7 +70,7 @@ def process_folder(folder: Path, files: list[Path], dry_run: bool) -> dict:
         try:
             with tempfile.TemporaryDirectory(prefix="annex-backfill-") as tmp:
                 epub_path = convert_to_epub(chosen, Path(tmp))
-                dest = folder / f"{sanitize(folder.name)}.epub"
+                dest = folder / f"{sanitize(chosen.stem)}.epub"
                 shutil.copy2(epub_path, dest)
         except EbookConversionError as e:
             return {"folder": str(folder), "action": "error", "error": str(e)}
@@ -68,7 +81,7 @@ def process_folder(folder: Path, files: list[Path], dry_run: bool) -> dict:
             "result": dest.name, "removed": [f.name for f in siblings_to_remove],
         }
 
-    # Native epub already exists -- just drop the losing siblings.
+    # Native epub already exists -- just drop the losing same-title siblings.
     if dry_run:
         return {
             "folder": str(folder), "action": "would-dedupe",
@@ -96,10 +109,10 @@ def main():
 
         count = 0
         errors = 0
-        for folder, files in find_candidate_folders(library_root):
+        for folder, files in find_candidate_groups(library_root):
             if args.limit is not None and count >= args.limit:
                 break
-            result = process_folder(folder, files, dry_run)
+            result = process_group(folder, files, dry_run)
             print(result)
             count += 1
             if result.get("action") == "error":

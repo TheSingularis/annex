@@ -41,8 +41,8 @@ _SEGMENT_SERIES_RE = re.compile(r"^(?P<series>.+?)\s+(?P<seq>\d{1,3}(?:\.\d+)?)$
 # Segments that are noise, not title/author content, when they show up as the
 # middle or trailing segment of an otherwise-unresolved 3-way dash split.
 # Mirrors app.metadata's identical constants -- kept in sync deliberately so
-# Phase 4a's shadow resolver (app.matching.orchestrator, which calls this
-# module) doesn't disagree with the live resolver over this fix alone.
+# app.matching.orchestrator (which calls this module) doesn't disagree with
+# app.metadata's own cascade over this fix alone.
 _CREDIT_MARKER_RE = re.compile(
     r"^(?:trans(?:lated\s+by)?|read\s+by|narrated\s+by)\s+.+$", re.IGNORECASE
 )
@@ -64,8 +64,7 @@ def _is_noise_segment(segment: str) -> bool:
 # Separator is ':' or a single '_' -- downloaders that can't put a literal
 # ':' in a filename (Windows-illegal) sometimes substitute '_' instead of
 # one of the unicode lookalikes _COLON_SUBSTITUTES already handles. Mirrors
-# app.metadata's identical fix (kept in sync for Phase 4a's shadow
-# comparison) -- scoped to this regex only, not added to _COLON_SUBSTITUTES's
+# app.metadata's identical fix (kept in sync so the two don't disagree) -- scoped to this regex only, not added to _COLON_SUBSTITUTES's
 # blanket string-wide replacement, since '_' is already overloaded as a
 # generic word-separator elsewhere ("Author_-_Title").
 _COLON_SERIES_RE = re.compile(

@@ -449,9 +449,9 @@ def audible_product_to_candidate(product: dict) -> dict:
 
 
 # Audible's unofficial catalog API has no documented SLA and rate-limits
-# aggressively under back-to-back requests (observed live: the Phase 4a
-# shadow resolver re-querying the same title ~10s after the real import
-# already had, got a 429 where the first request succeeded). Retry a
+# aggressively under back-to-back requests (observed live: a retry
+# re-querying the same title ~10s after the first request succeeded still
+# got a 429). Retry a
 # bounded number of times with backoff rather than immediately falling
 # through to iTunes/Google Books, which lack series data and can drop a
 # confident match below CONFIDENCE_THRESHOLD.
@@ -705,7 +705,7 @@ def resolve_metadata(
 
 def _resolve_from_parsed(parsed: dict, category: str, is_comic: bool) -> dict:
     """The actual search/score/filter cascade, split out from resolve_metadata
-    so app.matching.orchestrator's shadow resolver (Phase 4a) can reuse it
+    so app.matching.orchestrator's resolve_metadata_v2 can reuse it
     with a dict from extraction.extract() instead of parse_torrent_name --
     same keys (author, title, series, series_seq), extra isbn/asin keys are
     simply ignored here same as today."""

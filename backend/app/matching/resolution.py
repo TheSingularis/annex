@@ -3,9 +3,8 @@ Exact-ID resolution: given an ISBN or ASIN already extracted from a filename
 or embedded metadata, look up the book directly instead of falling back to
 fuzzy title/author search.
 
-Not wired into the live app yet -- app/metadata.py's resolve_metadata still
-does the actual resolving. See /root/.claude/plans/jolly-greeting-karp.md
-(Phase 2).
+Called from app.matching.orchestrator.resolve_metadata_v2, the live resolver.
+See /root/.claude/plans/jolly-greeting-karp.md (Phase 2).
 """
 import requests
 from flask import current_app

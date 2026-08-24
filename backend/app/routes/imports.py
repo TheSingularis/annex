@@ -2,10 +2,10 @@ import json
 from pathlib import Path
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models import Import, ShadowMatch
+from app.models import Import
 from app.tasks import import_item, _finalize_import
-from app.metadata import resolve_metadata
-from app.fileops import discover_files, is_comic
+from app.matching.orchestrator import resolve_metadata_v2
+from app.fileops import discover_files, is_comic, remove_linked_files
 
 imports_bp = Blueprint("imports", __name__)
 
@@ -23,21 +23,6 @@ def list_imports():
 def get_import(import_id):
     record = Import.query.get_or_404(import_id)
     return jsonify(record.to_dict())
-
-
-@imports_bp.get("/shadow-matches")
-def shadow_match_summary():
-    """Phase 4a observation-window summary: agree/disagree counts between the
-    old (live) resolver and the new, still-unwired one. See
-    /root/.claude/plans/jolly-greeting-karp.md (Phase 4a)."""
-    matches = ShadowMatch.query.order_by(ShadowMatch.created_at.desc()).limit(500).all()
-    return jsonify({
-        "total": len(matches),
-        "agree": sum(1 for m in matches if m.agrees is True),
-        "disagree": sum(1 for m in matches if m.agrees is False),
-        "errors": sum(1 for m in matches if m.error),
-        "matches": [m.to_dict() for m in matches],
-    })
 
 
 @imports_bp.post("/scan")
@@ -81,7 +66,7 @@ def manual_import():
             return jsonify({"error": record.error_message}), 400
 
         # Still query APIs to pick up series data
-        meta = resolve_metadata(f"{author} {title}", category, is_comic=is_comic(files))
+        meta = resolve_metadata_v2(f"{author} {title}", category, is_comic=is_comic(files))
         top = meta["candidates"][0] if meta["candidates"] else {}
         match = {
             "author": author,
@@ -140,7 +125,7 @@ def approve_import(import_id):
 
     # If series wasn't explicitly set, query APIs to fill it in
     if not series and not series_seq:
-        meta = resolve_metadata(f"{author} {title}", record.category, is_comic=is_comic(files))
+        meta = resolve_metadata_v2(f"{author} {title}", record.category, is_comic=is_comic(files))
         top = meta["candidates"][0] if meta["candidates"] else {}
         series = top.get("series", "")
         series_seq = top.get("series_seq", "")
@@ -188,12 +173,16 @@ def reset_import(import_id):
     Deliberately scoped to imported-only (not a general status editor) --
     added after a real false-positive batch (title_only retry matching a
     same-titled but wrong-author book) needed correcting via the API rather
-    than direct DB access. Does NOT remove the hardlinked file(s) already
-    written under the wrong target_path -- that still needs manual cleanup
-    on the media share."""
+    than direct DB access. Also removes the hardlinked file(s) this import
+    wrote under the wrong target_path, via linked_files_json -- records
+    imported before that field existed have no tracked files to remove, so
+    those still need manual cleanup on the media share."""
     record = Import.query.get_or_404(import_id)
     if record.status != "imported":
         return jsonify({"error": "Only imported records can be reset"}), 400
+
+    if record.linked_files_json:
+        remove_linked_files([Path(p) for p in json.loads(record.linked_files_json)])
 
     record.status = "needs_review"
     record.resolved_author = None
@@ -201,6 +190,7 @@ def reset_import(import_id):
     record.resolved_series = None
     record.resolved_series_seq = None
     record.target_path = None
+    record.linked_files_json = None
     # Clear the stale confident score/candidates too -- otherwise a record
     # read between reset and its next retry completing briefly shows the
     # old (wrong) confidence value, which looked like a live inconsistency

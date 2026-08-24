@@ -94,3 +94,32 @@ def hardlink_files(source_files: list[Path], target_dir: Path, title: str) -> li
         linked.append(dst)
 
     return linked
+
+
+def remove_linked_files(linked_files: list[Path]) -> None:
+    """Undoes exactly what a prior hardlink_files() call did: deletes the
+    given files, then removes each one's parent directory if that leaves it
+    completely empty. Used by reset_import to clean up a wrong match's
+    on-disk footprint.
+
+    Deliberately scoped to the tracked files only, not a directory wipe --
+    a target directory can be shared (e.g. other books by the same author),
+    so deleting anything beyond what this specific import created risks
+    taking out unrelated content. This also means a directory holding
+    scanner-generated leftovers (cover art, metadata.json written by a
+    library scanner after the fact) is left in place rather than guessed
+    away -- harmless clutter beats a wrong deletion.
+    """
+    dirs_to_check = set()
+
+    for f in linked_files:
+        if f.exists():
+            f.unlink()
+        dirs_to_check.add(f.parent)
+
+    for d in dirs_to_check:
+        try:
+            if d.is_dir() and not any(d.iterdir()):
+                d.rmdir()
+        except OSError:
+            pass

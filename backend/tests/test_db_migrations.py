@@ -32,6 +32,7 @@ def test_migrate_schema_adds_missing_columns(db_app):
     cols = _imports_columns()
     assert "isbn" in cols
     assert "asin" in cols
+    assert "linked_files_json" in cols
 
 
 def test_migrate_schema_is_idempotent(db_app):
@@ -43,6 +44,7 @@ def test_migrate_schema_is_idempotent(db_app):
     cols = _imports_columns()
     assert "isbn" in cols
     assert "asin" in cols
+    assert "linked_files_json" in cols
 
 
 def test_migrate_schema_handles_column_already_added_by_a_racing_process(db_app):
@@ -58,3 +60,4 @@ def test_migrate_schema_handles_column_already_added_by_a_racing_process(db_app)
     cols = _imports_columns()
     assert "isbn" in cols
     assert "asin" in cols
+    assert "linked_files_json" in cols

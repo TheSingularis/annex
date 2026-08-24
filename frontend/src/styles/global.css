@@ -56,14 +56,19 @@ a {
   align-items: center;
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 2px;
   border: 1px solid currentColor;
+  /* Double-ruled die border -- the outer border plus an inset hairline,
+     the way an actual rubber datestamp's ruling reads on paper. Stands in
+     for the authenticity the removed rotation was reaching for, without
+     the randomness that read as a rendering glitch. */
+  outline: 1px solid currentColor;
+  outline-offset: -3px;
   box-shadow: var(--shadow-stamp-inset);
-  transform: rotate(-2deg);
   white-space: nowrap;
 }
 

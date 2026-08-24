@@ -27,10 +27,6 @@ class Config:
     CONFIDENCE_THRESHOLD = float(os.environ.get("CONFIDENCE_THRESHOLD", 0.85))
     POLL_INTERVAL_SECONDS = int(os.environ.get("POLL_INTERVAL_SECONDS", 60))
 
-    # Phase 4a shadow-mode toggle -- see /root/.claude/plans/jolly-greeting-karp.md.
-    # Redeploy-to-toggle is acceptable for a temporary observation-window instrument.
-    SHADOW_MATCHER_ENABLED = os.environ.get("SHADOW_MATCHER_ENABLED", "true").lower() == "true"
-
     # Converts AZW3/MOBI ebooks to EPUB at import time (via Calibre's
     # ebook-convert CLI) so downstream tools that only support true EPUB
     # (e.g. BookBridge) don't break on whichever format happens to sort

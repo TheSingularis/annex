@@ -1,10 +1,12 @@
 """
-Phase-4a shadow resolver: composes extraction.py + resolution.py + the
-existing fuzzy cascade (shared via app.metadata._resolve_from_parsed) into
-the same {confidence, match, candidates} shape as app.metadata's
-resolve_metadata. Shadow-only for now -- not used for any real import
-decision, only for offline comparison during the observation window. See
-/root/.claude/plans/jolly-greeting-karp.md (Phase 4a).
+Live resolver: composes extraction.py + resolution.py + the existing fuzzy
+cascade (shared via app.metadata._resolve_from_parsed) into the same
+{confidence, match, candidates} shape app.metadata's resolve_metadata used
+to produce directly. This is what app.tasks._run_import calls for every real
+import decision -- promoted after a shadow-mode observation window (see
+/root/.claude/plans/jolly-greeting-karp.md) showed 270/273 agreement with
+the old resolver, with the 3 disagreements being either a since-fixed sync
+gap or genuine improvements from exact-ID resolution.
 """
 from dataclasses import asdict, replace
 

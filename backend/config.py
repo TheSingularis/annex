@@ -27,6 +27,12 @@ class Config:
     CONFIDENCE_THRESHOLD = float(os.environ.get("CONFIDENCE_THRESHOLD", 0.85))
     POLL_INTERVAL_SECONDS = int(os.environ.get("POLL_INTERVAL_SECONDS", 60))
 
+    # Converts AZW3/MOBI ebooks to EPUB at import time (via Calibre's
+    # ebook-convert CLI) so downstream tools that only support true EPUB
+    # (e.g. BookBridge) don't break on whichever format happens to sort
+    # first alphabetically. Kill-switch in case Calibre conversion misbehaves.
+    EBOOK_CONVERT_ENABLED = os.environ.get("EBOOK_CONVERT_ENABLED", "true").lower() == "true"
+
     GIT_SHA = os.environ.get("GIT_SHA", "dev")
 
     # Optional — enables ComicVine as a metadata source for western comics.

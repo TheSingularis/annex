@@ -1,0 +1,50 @@
+name: Weekly storage cleanup
+
+# Actions artifact storage counts against a shared, account-wide quota for
+# private repos (hit account-wide in Sept 2026). retention-days alone only
+# prevents *future* uploads from outliving their window; the prune-artifacts
+# job below is a weekly backstop that actively prunes anything already past
+# it. prune-package-versions covers the other half: ghcr.io image versions
+# never expire on their own, so every push otherwise accumulates permanent,
+# untagged layers forever (found 117 untagged versions on one repo's image
+# before this was added) — this keeps every tagged version (including
+# `latest`) and only deletes versions with zero tags pointing at them.
+on:
+  schedule:
+    - cron: '0 3 * * 0'
+  workflow_dispatch: {}
+
+permissions:
+  actions: write
+
+jobs:
+  prune-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete artifacts older than 7 days
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          cutoff=$(date -u -d '7 days ago' +%s)
+          gh api "repos/$REPO/actions/artifacts" --paginate --jq '.artifacts[] | "\(.id)\t\(.created_at)"' |
+          while IFS=$'\t' read -r id created; do
+            created_ts=$(date -u -d "$created" +%s)
+            if [ "$created_ts" -lt "$cutoff" ]; then
+              echo "Deleting artifact $id (created $created)"
+              gh api -X DELETE "repos/$REPO/actions/artifacts/$id"
+            fi
+          done
+
+  prune-package-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete untagged image versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'annex'
+          package-type: 'container'
+          min-versions-to-keep: 0
+          delete-only-untagged-versions: true
